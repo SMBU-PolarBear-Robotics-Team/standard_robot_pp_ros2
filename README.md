@@ -16,6 +16,12 @@ ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人
 
 ## 如何使用
 
+### 运行程序前
+
+1. [配置udev](./doc/appendix.md/#配置udev规则)
+
+### 运行本程序
+
 ## 附录
 
 [appendix](./doc/appendix.md)

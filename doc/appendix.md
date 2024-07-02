@@ -5,7 +5,7 @@
 
 ## 配置udev规则
 
-因为Ubuntu会自动分配USB串口设备的串口号，所以有时候`/dev/ttyACM0`会变成`/dev/ttyACM1`，导致一些使用串口的程序在使用`/dev/ttyACM0`串口时会出现问题。通过配置udev规则可以实现将对应设备标识为正确的`/dev/ttyACM0`
+为了保证程序能正确识别到C板的`/dev/ttyACM0`串口，我们需要配置udev规则。
 
 1. 查看usb连接信息：
    - 输入`lsusb`可以显示出当前的串口设备的信息。如：
