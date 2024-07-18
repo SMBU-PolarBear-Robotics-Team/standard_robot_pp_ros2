@@ -40,7 +40,8 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
   owned_ctx_{new IoContext(2)},
   serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
 {
-    RCLCPP_DEBUG(get_logger(), "Start ROS2_StandardRobotpp!");
+    RCLCPP_INFO(get_logger(), "Start ROS2_StandardRobotpp!");
+    std::cout << "\033[32m Start ROS2_StandardRobotpp! \033[0m" << std::endl;
 
     getParams();
 
@@ -95,12 +96,6 @@ void ROS2_StandardRobotpp::getParams()
     auto fc = FlowControl::NONE;
     auto pt = Parity::NONE;
     auto sb = StopBits::ONE;
-
-    // std::cout<<declare_parameter<std::string>("device_name", "")<<std::endl;
-    // std::cout<<declare_parameter<int>("baud_rate", 0)<<std::endl;
-    // std::cout<<declare_parameter<std::string>("flow_control", "")<<std::endl;
-    // std::cout<<declare_parameter<std::string>("parity", "")<<std::endl;
-    // std::cout<<declare_parameter<std::string>("stop_bits", "")<<std::endl;
 
     try {
         device_name_ = declare_parameter<std::string>("device_name", "");
@@ -174,9 +169,22 @@ void ROS2_StandardRobotpp::getParams()
 
 void ROS2_StandardRobotpp::receiveData()
 {
-    RCLCPP_DEBUG(get_logger(), "Start receiveData!");
+    RCLCPP_INFO(get_logger(), "Start receiveData!");
+    std::cout << "\033[32m Start receiveData! \033[0m" << std::endl;
+
+    try {
+        serial_driver_->init_port(device_name_, *device_config_);
+        if (!serial_driver_->port()->is_open()) {
+            serial_driver_->port()->open();
+        }
+    } catch (const std::exception & ex) {
+        RCLCPP_ERROR(
+            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
+        throw ex;
+    }
+
     while (true) {
-        RCLCPP_INFO(get_logger(), "receiving...");
+        std::cout << "\033[32m receiving... \033[0m" << std::endl;
 
         // try {
         //     serial_driver_->port()->receive(header);
@@ -201,6 +209,7 @@ void ROS2_StandardRobotpp::receiveData()
         // } catch (const std::exception & ex) {
         //     RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
         // }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
