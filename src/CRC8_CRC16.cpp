@@ -15,7 +15,7 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
-#include "ROS2_StandardRobotpp/CRC8_CRC16.hpp"
+#include "CRC8_CRC16.hpp"
 //crc8 generator polynomial:G(x)=x8+x5+x4+1
 const uint8_t CRC8_INIT = 0xff;
 const uint8_t CRC8_table[256] =
@@ -140,7 +140,7 @@ void append_CRC8_check_sum(unsigned char *pch_message, unsigned int dw_length)
 uint16_t get_CRC16_check_sum(uint8_t *pch_message,uint32_t dw_length,uint16_t wCRC)
 {
     uint8_t chData;
-    if (pch_message == NULL)
+    if (pch_message == nullptr)
     {
         return 0xFFFF;
     }
@@ -162,7 +162,7 @@ uint16_t get_CRC16_check_sum(uint8_t *pch_message,uint32_t dw_length,uint16_t wC
 uint32_t verify_CRC16_check_sum(uint8_t *pchMessage, uint32_t dwLength)
 {
     uint16_t wExpected = 0;
-    if ((pchMessage == NULL) || (dwLength <= 2))
+    if ((pchMessage == nullptr) || (dwLength <= 2))
     {
         return 0;
     }
@@ -180,7 +180,7 @@ uint32_t verify_CRC16_check_sum(uint8_t *pchMessage, uint32_t dwLength)
 void append_CRC16_check_sum(uint8_t * pchMessage,uint32_t dwLength)
 {
     uint16_t wCRC = 0;
-    if ((pchMessage == NULL) || (dwLength <= 2))
+    if ((pchMessage == nullptr) || (dwLength <= 2))
     {
         return;
     }
