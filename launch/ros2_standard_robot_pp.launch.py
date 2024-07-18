@@ -6,8 +6,8 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # config = os.path.join(
-    #     get_package_share_directory('ros2_standard_robot_pp'), 'config', 'serial_driver.yaml')
+    config = os.path.join(
+        get_package_share_directory('ros2_standard_robot_pp'), 'config', 'ros2_standard_robot_pp.yaml')
 
     ros2_standard_robot_pp_node = Node(
         package='ros2_standard_robot_pp',
@@ -15,6 +15,7 @@ def generate_launch_description():
         namespace='',
         output='screen',
         emulate_tty=True,
+        parameters=[config],
     )
 
     return LaunchDescription([ros2_standard_robot_pp_node])

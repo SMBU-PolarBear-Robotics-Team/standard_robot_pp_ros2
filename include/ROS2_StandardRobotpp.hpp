@@ -45,6 +45,15 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     ~ROS2_StandardRobotpp() override;
 
   private:
+    std::unique_ptr<IoContext> owned_ctx_;
+
+    void getParams();
+
+    // Serial port
+    std::string device_name_;
+    std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
+    std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
+
     // receive_thread
     std::thread receive_thread_;
     void receiveData();
