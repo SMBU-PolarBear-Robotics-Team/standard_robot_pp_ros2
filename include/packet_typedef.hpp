@@ -7,6 +7,11 @@
 
 namespace ros2_standard_robot_pp
 {
+
+const uint8_t ID_DEBUG = 0x01;
+const uint8_t ID_IMU = 0x02;
+const uint8_t ID_ROBOT_INFO = 0x03;
+
 struct HeaderFrame
 {
   uint8_t sof;
