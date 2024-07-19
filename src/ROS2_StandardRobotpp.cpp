@@ -197,7 +197,7 @@ void ROS2_StandardRobotpp::receiveData()
         try {
             serial_driver_->port()->receive(sof);
 
-            std::cout << "receive:" << (int)sof[0] << std::endl;
+            std::cout << "sof:" << (int)sof[0] << std::endl;
 
             if (sof[0] == SOF_RECEIVE) {
                 std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
@@ -210,7 +210,17 @@ void ROS2_StandardRobotpp::receiveData()
                 bool crc8_ok = crc8::verify_CRC8_check_sum(
                     reinterpret_cast<uint8_t *>(&header_frame), sizeof(header_frame));
                 if (crc8_ok) {
-                    ;
+                    // 根据数据段长度读取数据
+                    std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
+                    serial_driver_->port()->receive(data_buf);
+                    // 添加header_frame_buf到data_buf
+                    data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
+                    // 输出data_buf
+                    for (auto & data : data_buf) {
+                        std::cout << (int)data << " ";
+                    }
+                    std::cout << std::endl;
+
                 } else {
                     std::cout << "\033[31m Header frame CRC8 error! \033[0m" << std::endl;
                 }

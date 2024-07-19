@@ -15,6 +15,30 @@ struct HeaderFrame
   uint8_t crc;
 } __attribute__((packed));
 
+// IMU 数据包
+struct ReceiveImuData
+{
+    HeaderFrame frame_header;
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        float yaw;    // rad
+        float pitch;  // rad
+        float roll;   // rad
+
+        float yaw_vel;    // rad/s
+        float pitch_vel;  // rad/s
+        float roll_vel;   // rad/s
+
+        // float x_accel;  // m/s^2
+        // float y_accel;  // m/s^2
+        // float z_accel;  // m/s^2
+    } __attribute__((packed)) data;
+
+    uint16_t crc;
+} __attribute__((packed));
 
 
 template <typename T>
