@@ -15,26 +15,27 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
-#ifndef CRC8_CRC16_H
-#define CRC8_CRC16_H
+#ifndef CRC8_CRC16_HPP
+#define CRC8_CRC16_HPP
 
 #include <cstdint>
 
+namespace crc8
+{
+extern uint8_t get_CRC8_check_sum(
+    uint8_t * pchMessage, unsigned int dwLength, uint8_t ucCRC8);
 
-extern uint8_t get_CRC8_check_sum(unsigned char *pchMessage,unsigned int dwLength,unsigned char ucCRC8);
+extern uint32_t verify_CRC8_check_sum(uint8_t * pchMessage, unsigned int dwLength);
 
+extern void append_CRC8_check_sum(uint8_t * pchMessage, unsigned int dwLength);
+}  // namespace crc8
 
-extern uint32_t verify_CRC8_check_sum(unsigned char *pchMessage, unsigned int dwLength);
+namespace crc16
+{
+extern uint16_t get_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength, uint16_t wCRC);
 
+extern uint32_t verify_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength);
 
-extern void append_CRC8_check_sum(unsigned char *pchMessage, unsigned int dwLength);
-
-
-extern uint16_t get_CRC16_check_sum(uint8_t *pchMessage,uint32_t dwLength,uint16_t wCRC);
-
-
-extern uint32_t verify_CRC16_check_sum(uint8_t *pchMessage, uint32_t dwLength);
-
-
-extern void append_CRC16_check_sum(uint8_t * pchMessage,uint32_t dwLength);
-#endif
+extern void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength);
+}  // namespace crc16
+#endif  //CRC8_CRC16_HPP
