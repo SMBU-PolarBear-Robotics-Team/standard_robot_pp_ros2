@@ -183,7 +183,7 @@ void ROS2_StandardRobotpp::receiveData()
         throw ex;
     }
 
-    while (true) {
+    while (rclcpp::ok()) {
         std::cout << "\033[32m receiving... \033[0m" << std::endl;
 
         // try {
