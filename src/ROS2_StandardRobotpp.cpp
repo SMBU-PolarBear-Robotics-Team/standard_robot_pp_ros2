@@ -32,9 +32,14 @@
 
 #include "CRC8_CRC16.hpp"
 #include "ROS2_StandardRobotpp.hpp"
+#include "packet_typedef.hpp"
 
 namespace ros2_standard_robot_pp
 {
+
+#define SOF_RECEIVE 0x5A
+#define SOF_SEND 0x5A
+
 ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 : Node("ros2_standard_robot_pp", options),
   owned_ctx_{new IoContext(2)},
@@ -77,13 +82,13 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
         receive_thread_.join();
     }
 
-    //   if (serial_driver_->port()->is_open()) {
-    //     serial_driver_->port()->close();
-    //   }
+    if (serial_driver_->port()->is_open()) {
+        serial_driver_->port()->close();
+    }
 
-    //   if (owned_ctx_) {
-    //     owned_ctx_->waitForExit();
-    //   }
+    if (owned_ctx_) {
+        owned_ctx_->waitForExit();
+    }
 }
 
 void ROS2_StandardRobotpp::getParams()
@@ -172,6 +177,9 @@ void ROS2_StandardRobotpp::receiveData()
     RCLCPP_INFO(get_logger(), "Start receiveData!");
     std::cout << "\033[32m Start receiveData! \033[0m" << std::endl;
 
+    std::vector<uint8_t> sof(1);
+    std::vector<uint8_t> receive_data;
+
     try {
         serial_driver_->init_port(device_name_, *device_config_);
         if (!serial_driver_->port()->is_open()) {
@@ -186,30 +194,42 @@ void ROS2_StandardRobotpp::receiveData()
     while (rclcpp::ok()) {
         std::cout << "\033[32m receiving... \033[0m" << std::endl;
 
-        // try {
-        //     serial_driver_->port()->receive(header);
+        try {
+            serial_driver_->port()->receive(sof);
 
-        //     switch (header[0]) {
-        //         case 0x5A:
-        //             receiveDataVision(header);
-        //             break;
-        //         case 0x5B:
-        //             receiveDataAllRobotHP(header);
-        //             break;
-        //         case 0x5C:
-        //             receiveDataGameStatus(header);
-        //             break;
-        //         case 0x5D:
-        //             receiveDataRobotStatus(header);
-        //             break;
-        //         default:
-        //             RCLCPP_WARN(get_logger(), "Unknown header received: %02X", header[0]);
-        //             break;
-        //     }
-        // } catch (const std::exception & ex) {
-        //     RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
-        // }
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::cout << "receive:" << (int)sof[0] << std::endl;
+
+            if (sof[0] == SOF_RECEIVE) {
+                std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
+
+                serial_driver_->port()->receive(header_frame_buf);  // 读取除sof外剩下的数据
+                header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加sof
+                HeaderFrame header_frame = fromVector<HeaderFrame>(header_frame_buf);
+
+                // HeaderFrame CRC8 check
+                bool crc8_ok = crc8::verify_CRC8_check_sum(
+                    reinterpret_cast<uint8_t *>(&header_frame), sizeof(header_frame));
+                if (crc8_ok) {
+                    ;
+                } else {
+                    std::cout << "\033[31m Header frame CRC8 error! \033[0m" << std::endl;
+                }
+
+                std::cout << "header_frame.sof: " << (int)header_frame.sof << std::endl;
+                std::cout << "header_frame.len: " << (int)header_frame.len << std::endl;
+                std::cout << "header_frame.id: " << (int)header_frame.id << std::endl;
+                std::cout << "header_frame.crc: " << (int)header_frame.crc << std::endl;
+
+            } else {
+                continue;
+            }
+
+        } catch (const std::exception & ex) {
+            RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
+        }
+
+        // thread sleep
+        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
 
