@@ -16,6 +16,9 @@
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
 #include "CRC8_CRC16.hpp"
+
+#include <cstdint>
+#include <iostream>
 namespace crc8
 {
 //crc8 generator polynomial:G(x)=x8+x5+x4+1
@@ -46,8 +49,7 @@ const uint8_t CRC8_table[256] = {
   * @param[in]      ucCRC8:初始CRC8
   * @retval         计算完的CRC8
   */
-uint8_t get_CRC8_check_sum(
-    uint8_t * pch_message, unsigned int dw_length, uint8_t ucCRC8)
+uint8_t get_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length, uint8_t ucCRC8)
 {
     uint8_t uc_index;
     while (dw_length--) {
@@ -173,4 +175,57 @@ void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength)
     pchMessage[dwLength - 2] = (uint8_t)(wCRC & 0x00ff);
     pchMessage[dwLength - 1] = (uint8_t)((wCRC >> 8) & 0x00ff);
 }
+
+//// 以下是对std::vector<uint8_t>的重载，还在测试中，暂时不用
+
+/**
+  * @brief          计算CRC16
+  * @param[in]      pch_message: 数据
+  * @param[in]      wCRC:初始CRC16
+  * @retval         计算完的CRC16
+  */
+uint16_t get_CRC16_check_sum(std::vector<uint8_t> & pchMessage, uint16_t wCRC)
+{
+    if (pchMessage.empty()) {
+        return 0xFFFF;
+    }
+
+    uint8_t chData;
+    // uint16_t wCRC_ = wCRC;
+    for (const auto & data : pchMessage) {
+        chData = data;
+        std::cout << (int)chData << " ";
+        // wCRC_ =
+        //     ((uint16_t)(wCRC_) >> 8) ^ wCRC_table[((uint16_t)(wCRC_) ^ (uint16_t)(chData)) & 0x00ff];
+        (wCRC) =
+            ((uint16_t)(wCRC) >> 8) ^ wCRC_table[((wCRC) ^ (chData)) & 0x00ff];
+    }
+    std::cout << std::endl;
+
+    std::cout << "wCRC: " << wCRC << std::endl;
+    return wCRC;
+}
+
+/**
+  * @brief          CRC16校验函数
+  * @param[in]      pch_message: 数据
+  * @retval         真或者假
+  */
+bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage)
+{
+    if (pchMessage.size() <= 2) {
+        return false;
+    }
+    uint16_t wExpected = 0;
+    uint32_t dwLength = pchMessage.size();
+    wExpected = get_CRC16_check_sum(pchMessage, CRC16_INIT);
+
+    std::cout << "wExpected: " << wExpected << std::endl;
+    std::cout << "dwLength: " << dwLength << std::endl;
+
+    return (
+        (wExpected & 0xff) == pchMessage[dwLength - 2] &&
+        ((wExpected >> 8) & 0xff) == pchMessage[dwLength - 1]);
+}
+
 }  // namespace crc16
