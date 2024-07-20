@@ -20,6 +20,24 @@ struct HeaderFrame
   uint8_t crc;
 } __attribute__((packed));
 
+#define DEBUG_PACKAGE_NUM 10
+// 串口调试数据包
+struct ReceiveDebugData
+{
+    HeaderFrame frame_header;
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        uint8_t name[10];
+        uint8_t type;
+        float data;
+    } __attribute__((packed)) packages[DEBUG_PACKAGE_NUM];
+
+    uint16_t checksum;
+} __attribute__((packed));
+
 // IMU 数据包
 struct ReceiveImuData
 {

@@ -231,18 +231,26 @@ void ROS2_StandardRobotpp::receiveData()
                     std::vector<uint8_t> header_frame_buf;
                     switch (header_frame.id) {
                         case ID_DEBUG: {
-                            std::cout << "\033[33m Waiting to decode debug data. \033[0m"
-                                      << std::endl;
+                            ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
+                            // 整包数据校验
+                            bool crc16_ok = crc16::verify_CRC16_check_sum(
+                                reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
+                            if (crc16_ok) {
+                                std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
+                            } else {
+                                RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
+                            }
                         } break;
                         case ID_IMU: {
-                            std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
                             ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
 
                             // 整包数据校验
                             bool crc16_ok = crc16::verify_CRC16_check_sum(
-                                reinterpret_cast<uint8_t *>(&imu_data), sizeof(imu_data));
-                            if (!crc16_ok) {
-                                std::cout << "\033[31m crc16 error... \033[0m" << std::endl;
+                                reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
+                            if (crc16_ok) {
+                                std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
+                            } else {
+                                RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                             }
                         } break;
                         case ID_ROBOT_INFO: {
