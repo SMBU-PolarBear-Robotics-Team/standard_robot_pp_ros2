@@ -195,74 +195,76 @@ void ROS2_StandardRobotpp::receiveData()
         try {
             serial_driver_->port()->receive(sof);
 
-            if (sof[0] == SOF_RECEIVE) {
-                std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
-
-                serial_driver_->port()->receive(header_frame_buf);  // 读取除sof外剩下的数据
-                header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加sof
-                HeaderFrame header_frame = fromVector<HeaderFrame>(header_frame_buf);
-
-                // HeaderFrame CRC8 check
-                bool crc8_ok = crc8::verify_CRC8_check_sum(
-                    reinterpret_cast<uint8_t *>(&header_frame), sizeof(header_frame));
-                if (!crc8_ok) {
-                    RCLCPP_ERROR(get_logger(), "Header frame CRC8 error!");
-                    continue;
-                }
-
-                // 根据数据段长度读取数据
-                std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
-                serial_driver_->port()->receive(data_buf);
-                // 添加header_frame_buf到data_buf
-                data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
-
-                // 根据header_frame.id解析数据
-                switch (header_frame.id) {
-                    case ID_DEBUG: {
-                        ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
-                        // 整包数据校验
-                        bool crc16_ok = crc16::verify_CRC16_check_sum(
-                            reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                        if (crc16_ok) {
-                            std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
-                        } else {
-                            RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
-                        }
-                    } break;
-                    case ID_IMU: {
-                        ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
-
-                        // 整包数据校验
-                        bool crc16_ok = crc16::verify_CRC16_check_sum(
-                            reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                        if (crc16_ok) {
-                            std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
-                        } else {
-                            RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
-                        }
-                    } break;
-                    case ID_ROBOT_INFO: {
-                        ReceiveRobotInfoData robot_info_data =
-                            fromVector<ReceiveRobotInfoData>(data_buf);
-
-                        // 整包数据校验
-                        bool crc16_ok = crc16::verify_CRC16_check_sum(
-                            reinterpret_cast<uint8_t *>(&robot_info_data),
-                            sizeof(ReceiveRobotInfoData));
-                        if (crc16_ok) {
-                            std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
-                        } else {
-                            RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
-                        }
-                    } break;
-                    default: {
-                        RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
-                    } break;
-                }
-
-            } else {
+            if (sof[0] != SOF_RECEIVE) {
                 continue;
             }
+
+            //### sof[0] == SOF_RECEIVE 后读取剩余 header_frame内容
+            std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
+
+            serial_driver_->port()->receive(header_frame_buf);  // 读取除sof外剩下的数据
+            header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加sof
+            HeaderFrame header_frame = fromVector<HeaderFrame>(header_frame_buf);
+
+            // HeaderFrame CRC8 check
+            bool crc8_ok = crc8::verify_CRC8_check_sum(
+                reinterpret_cast<uint8_t *>(&header_frame), sizeof(header_frame));
+            if (!crc8_ok) {
+                RCLCPP_ERROR(get_logger(), "Header frame CRC8 error!");
+                continue;
+            }
+
+            //### crc8_ok 校验正确后读取数据段
+            // 根据数据段长度读取数据
+            std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
+            serial_driver_->port()->receive(data_buf);
+            // 添加header_frame_buf到data_buf
+            data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
+
+            // 根据header_frame.id解析数据
+            switch (header_frame.id) {
+                case ID_DEBUG: {
+                    ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
+                    if (crc16_ok) {
+                        std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
+                    }
+                } break;
+                case ID_IMU: {
+                    ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
+
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
+                    if (crc16_ok) {
+                        std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
+                    }
+                } break;
+                case ID_ROBOT_INFO: {
+                    ReceiveRobotInfoData robot_info_data =
+                        fromVector<ReceiveRobotInfoData>(data_buf);
+
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&robot_info_data),
+                        sizeof(ReceiveRobotInfoData));
+                    if (crc16_ok) {
+                        std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
+                    }
+                } break;
+                default: {
+                    RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
+                } break;
+            }
+
         } catch (const std::exception & ex) {
             RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
         }
