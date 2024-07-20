@@ -254,8 +254,16 @@ void ROS2_StandardRobotpp::receiveData()
                             }
                         } break;
                         case ID_ROBOT_INFO: {
-                            std::cout << "\033[33m Waiting to decode robot info data. \033[0m"
-                                      << std::endl;
+                            ReceiveRobotInfoData robot_info_data = fromVector<ReceiveRobotInfoData>(data_buf);
+
+                            // 整包数据校验
+                            bool crc16_ok = crc16::verify_CRC16_check_sum(
+                                reinterpret_cast<uint8_t *>(&robot_info_data), sizeof(ReceiveRobotInfoData));
+                            if (crc16_ok) {
+                                std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
+                            } else {
+                                RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
+                            }
                         } break;
                         default: {
                             RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
