@@ -205,71 +205,59 @@ void ROS2_StandardRobotpp::receiveData()
                 // HeaderFrame CRC8 check
                 bool crc8_ok = crc8::verify_CRC8_check_sum(
                     reinterpret_cast<uint8_t *>(&header_frame), sizeof(header_frame));
-                if (crc8_ok) {
-                    // 根据数据段长度读取数据
-                    std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
-                    serial_driver_->port()->receive(data_buf);
-                    // 添加header_frame_buf到data_buf
-                    data_buf.insert(
-                        data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
-
-                    // // 整包数据校验
-                    // bool crc16_ok = crc16::verify_CRC16_check_sum(data_buf);
-                    // std::cout << "crc16:"
-                    //           << uint16_t(
-                    //                  (data_buf[data_buf.size() - 2] << 8) +
-                    //                  data_buf[data_buf.size() - 1])
-                    //           << std::endl;
-
-                    // if (crc16_ok) {
-                    //     std::cout << "\033[32m crc16_ok... \033[0m" << std::endl;
-                    // } else {
-                    //     std::cout << "\033[31m crc16 error... \033[0m" << std::endl;
-                    // }
-
-                    // 根据header_frame.id解析数据
-                    switch (header_frame.id) {
-                        case ID_DEBUG: {
-                            ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
-                            // 整包数据校验
-                            bool crc16_ok = crc16::verify_CRC16_check_sum(
-                                reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                            if (crc16_ok) {
-                                std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
-                            } else {
-                                RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
-                            }
-                        } break;
-                        case ID_IMU: {
-                            ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
-
-                            // 整包数据校验
-                            bool crc16_ok = crc16::verify_CRC16_check_sum(
-                                reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                            if (crc16_ok) {
-                                std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
-                            } else {
-                                RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
-                            }
-                        } break;
-                        case ID_ROBOT_INFO: {
-                            ReceiveRobotInfoData robot_info_data = fromVector<ReceiveRobotInfoData>(data_buf);
-
-                            // 整包数据校验
-                            bool crc16_ok = crc16::verify_CRC16_check_sum(
-                                reinterpret_cast<uint8_t *>(&robot_info_data), sizeof(ReceiveRobotInfoData));
-                            if (crc16_ok) {
-                                std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
-                            } else {
-                                RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
-                            }
-                        } break;
-                        default: {
-                            RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
-                        } break;
-                    }
-                } else {
+                if (!crc8_ok) {
                     RCLCPP_ERROR(get_logger(), "Header frame CRC8 error!");
+                    continue;
+                }
+
+                // 根据数据段长度读取数据
+                std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
+                serial_driver_->port()->receive(data_buf);
+                // 添加header_frame_buf到data_buf
+                data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
+
+                // 根据header_frame.id解析数据
+                switch (header_frame.id) {
+                    case ID_DEBUG: {
+                        ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
+                        // 整包数据校验
+                        bool crc16_ok = crc16::verify_CRC16_check_sum(
+                            reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
+                        if (crc16_ok) {
+                            std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
+                        } else {
+                            RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
+                        }
+                    } break;
+                    case ID_IMU: {
+                        ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
+
+                        // 整包数据校验
+                        bool crc16_ok = crc16::verify_CRC16_check_sum(
+                            reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
+                        if (crc16_ok) {
+                            std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
+                        } else {
+                            RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
+                        }
+                    } break;
+                    case ID_ROBOT_INFO: {
+                        ReceiveRobotInfoData robot_info_data =
+                            fromVector<ReceiveRobotInfoData>(data_buf);
+
+                        // 整包数据校验
+                        bool crc16_ok = crc16::verify_CRC16_check_sum(
+                            reinterpret_cast<uint8_t *>(&robot_info_data),
+                            sizeof(ReceiveRobotInfoData));
+                        if (crc16_ok) {
+                            std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
+                        } else {
+                            RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
+                        }
+                    } break;
+                    default: {
+                        RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
+                    } break;
                 }
 
             } else {
