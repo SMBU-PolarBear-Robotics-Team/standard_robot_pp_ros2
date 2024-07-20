@@ -54,6 +54,12 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
     std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
 
+    // Publisher
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr
+        stm32_run_time_pub_;  // 发布STM32运行时间，数据基于接收到的imu数据时间戳
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub_;
+    void createPublisher();
+
     // receive_thread
     std::thread receive_thread_;
     void receiveData();

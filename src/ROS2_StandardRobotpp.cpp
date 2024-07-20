@@ -49,6 +49,7 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     std::cout << "\033[32m Start ROS2_StandardRobotpp! \033[0m" << std::endl;
 
     getParams();
+    createPublisher();
 
     // Create Publisher
     //   latency_pub_ = this->create_publisher<std_msgs::msg::Float64>("/latency", 10);
@@ -245,6 +246,15 @@ void ROS2_StandardRobotpp::receiveData()
                     } else {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     }
+
+                    std_msgs::msg::Float64 stm32_run_time;
+                    stm32_run_time.data = imu_data.time_stamp / 1000.0;
+                    stm32_run_time_pub_->publish(stm32_run_time);
+
+                    std_msgs::msg::Float64 debug_data;
+                    debug_data.data = imu_data.data.pitch;
+                    debug_pub_->publish(debug_data);
+
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
@@ -259,6 +269,8 @@ void ROS2_StandardRobotpp::receiveData()
                     } else {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
+                    std::cout << "Timestamp:" << robot_info_data.time_stamp / 1000.0f << "s"
+                              << std::endl;
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -272,6 +284,12 @@ void ROS2_StandardRobotpp::receiveData()
         // thread sleep
         // std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+}
+
+void ROS2_StandardRobotpp::createPublisher()
+{
+    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
+    debug_pub_ = this->create_publisher<std_msgs::msg::Float64>("/debug", 10);
 }
 
 }  // namespace ros2_standard_robot_pp
