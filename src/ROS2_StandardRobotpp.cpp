@@ -224,8 +224,6 @@ void ROS2_StandardRobotpp::receiveData()
             // 根据数据段长度读取数据
             std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
             int received_len = serial_driver_->port()->receive(data_buf);
-            std::cout << "receive_len:" << received_len << " ,data_len:" << header_frame.len + 2
-                      << std::endl;
             int received_len_sum = received_len;
             // 考虑到一次性读取数据可能存在数据量过大，读取不完整的情况。需要检测是否读取完整
             // 计算剩余未读取的数据长度
@@ -238,10 +236,8 @@ void ROS2_StandardRobotpp::receiveData()
                 received_len_sum += received_len;
                 remain_len -= received_len;
             }
-            std::cout << "receive_len_sum:" << received_len_sum
-                      << " ,data_len:" << header_frame.len + 2 << std::endl;
 
-            // 添加header_frame_buf到data_buf
+            // 数据段读取完成后添加header_frame_buf到data_buf，得到完整数据包
             data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
             // 根据header_frame.id解析数据
