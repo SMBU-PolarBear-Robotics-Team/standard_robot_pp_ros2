@@ -181,6 +181,8 @@ void ROS2_StandardRobotpp::receiveData()
     std::vector<uint8_t> sof(1);
     std::vector<uint8_t> receive_data;
 
+    int sof_count = 0;
+
     try {
         serial_driver_->init_port(device_name_, *device_config_);
         if (!serial_driver_->port()->is_open()) {
@@ -197,8 +199,11 @@ void ROS2_StandardRobotpp::receiveData()
             serial_driver_->port()->receive(sof);
 
             if (sof[0] != SOF_RECEIVE) {
+                sof_count++;
+                std::cout << "Find sof, cnt=" << sof_count << std::endl;
                 continue;
             }
+            sof_count = 0;
 
             //### sof[0] == SOF_RECEIVE 后读取剩余 header_frame内容
             std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
@@ -218,7 +223,24 @@ void ROS2_StandardRobotpp::receiveData()
             //### crc8_ok 校验正确后读取数据段
             // 根据数据段长度读取数据
             std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
-            serial_driver_->port()->receive(data_buf);
+            int received_len = serial_driver_->port()->receive(data_buf);
+            std::cout << "receive_len:" << received_len << " ,data_len:" << header_frame.len + 2
+                      << std::endl;
+            int received_len_sum = received_len;
+            // 考虑到一次性读取数据可能存在数据量过大，读取不完整的情况。需要检测是否读取完整
+            // 计算剩余未读取的数据长度
+            int remain_len = header_frame.len + 2 - received_len;
+            while (remain_len > 0) {  // 读取剩余未读取的数据
+                std::vector<uint8_t> remain_buf(remain_len);
+                received_len = serial_driver_->port()->receive(remain_buf);
+                data_buf.insert(
+                    data_buf.begin() + received_len_sum, remain_buf.begin(), remain_buf.end());
+                received_len_sum += received_len;
+                remain_len -= received_len;
+            }
+            std::cout << "receive_len_sum:" << received_len_sum
+                      << " ,data_len:" << header_frame.len + 2 << std::endl;
+
             // 添加header_frame_buf到data_buf
             data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
