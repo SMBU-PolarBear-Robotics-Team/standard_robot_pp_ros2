@@ -228,7 +228,6 @@ void ROS2_StandardRobotpp::receiveData()
                     // }
 
                     // 根据header_frame.id解析数据
-                    std::vector<uint8_t> header_frame_buf;
                     switch (header_frame.id) {
                         case ID_DEBUG: {
                             ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
