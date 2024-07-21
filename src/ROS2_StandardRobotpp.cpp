@@ -194,7 +194,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
         }
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -265,9 +265,7 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                    if (crc16_ok) {
-                        std::cout << "\033[32m Decoded debug data. \033[0m" << std::endl;
-                    } else {
+                    if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
                     }
 
@@ -279,9 +277,7 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                    if (crc16_ok) {
-                        std::cout << "\033[32m Decoded imu data. \033[0m" << std::endl;
-                    } else {
+                    if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     }
 
@@ -299,13 +295,9 @@ void ROS2_StandardRobotpp::receiveData()
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&robot_info_data),
                         sizeof(ReceiveRobotInfoData));
-                    if (crc16_ok) {
-                        std::cout << "\033[32m Decoded robot info data. \033[0m" << std::endl;
-                    } else {
+                    if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
-                    std::cout << "Timestamp:" << robot_info_data.time_stamp / 1000.0f << "s"
-                              << std::endl;
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -418,7 +410,7 @@ void ROS2_StandardRobotpp::sendData()
         }
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
