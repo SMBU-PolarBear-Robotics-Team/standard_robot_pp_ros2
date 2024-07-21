@@ -72,6 +72,10 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     // receive_thread
     std::thread receive_thread_;
     void receiveData();
+
+    // send thread
+    std::thread send_thread_;
+    void sendData();
 };
 }  // namespace ros2_standard_robot_pp
 
