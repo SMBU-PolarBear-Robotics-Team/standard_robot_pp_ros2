@@ -76,6 +76,10 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     // send thread
     std::thread send_thread_;
     void sendData();
+
+    // Serial port protect thread
+    std::thread serial_port_protect_thread_;
+    void serialPortProtect();
 };
 }  // namespace ros2_standard_robot_pp
 

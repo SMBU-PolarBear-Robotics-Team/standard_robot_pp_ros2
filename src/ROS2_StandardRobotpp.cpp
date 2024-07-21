@@ -69,6 +69,11 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
         throw ex;
     }
 
+    serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
+
+    // 延时10ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
     receive_thread_ = std::thread(&ROS2_StandardRobotpp::receiveData, this);
     send_thread_ = std::thread(&ROS2_StandardRobotpp::sendData, this);
 }
@@ -167,6 +172,30 @@ void ROS2_StandardRobotpp::getParams()
 
     device_config_ =
         std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
+}
+
+/********************************************************/
+/* Serial port protect                                  */
+/********************************************************/
+
+void ROS2_StandardRobotpp::serialPortProtect()
+{
+    RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
+    std::cout << "\033[32m Start serialPortProtect! \033[0m" << std::endl;
+
+    ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
+
+    while (rclcpp::ok()) {
+        try {
+            std::cout << "protecting..." << std::endl;
+            ;
+        } catch (const std::exception & ex) {
+            RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
+        }
+
+        // thread sleep
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
 }
 
 /********************************************************/
