@@ -17,10 +17,10 @@ const uint8_t DEBUG_PACKAGE_NAME_LEN = 10;
 
 struct HeaderFrame
 {
-    uint8_t sof;
-    uint8_t len;
-    uint8_t id;
-    uint8_t crc;
+    uint8_t sof;  // 数据帧起始字节，固定值为 0x5A
+    uint8_t len;  // 数据段长度
+    uint8_t id;   // 数据段id
+    uint8_t crc;  // 数据帧头的 CRC8 校验
 } __attribute__((packed));
 
 /********************************************************/
