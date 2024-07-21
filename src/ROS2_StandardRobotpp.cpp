@@ -58,6 +58,17 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     //   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     //     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
 
+    try {
+        serial_driver_->init_port(device_name_, *device_config_);
+        if (!serial_driver_->port()->is_open()) {
+            serial_driver_->port()->open();
+        }
+    } catch (const std::exception & ex) {
+        RCLCPP_ERROR(
+            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
+        throw ex;
+    }
+
     receive_thread_ = std::thread(&ROS2_StandardRobotpp::receiveData, this);
     send_thread_ = std::thread(&ROS2_StandardRobotpp::sendData, this);
 }
@@ -171,17 +182,6 @@ void ROS2_StandardRobotpp::receiveData()
     std::vector<uint8_t> receive_data;
 
     int sof_count = 0;
-
-    try {
-        serial_driver_->init_port(device_name_, *device_config_);
-        if (!serial_driver_->port()->is_open()) {
-            serial_driver_->port()->open();
-        }
-    } catch (const std::exception & ex) {
-        RCLCPP_ERROR(
-            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
-        throw ex;
-    }
 
     while (rclcpp::ok()) {
         try {
