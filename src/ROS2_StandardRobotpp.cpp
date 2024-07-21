@@ -314,7 +314,6 @@ void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_da
         if (name.empty()) {
             continue;
         }
-        std::cout << "name: " << name << std::endl;
 
         if (debug_pub_map_.find(name) != debug_pub_map_.end()) {  // The key is in the map
             debug_pub = debug_pub_map_.at(name);
