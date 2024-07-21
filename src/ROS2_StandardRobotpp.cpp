@@ -58,17 +58,6 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     //   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     //     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
 
-    try {
-        serial_driver_->init_port(device_name_, *device_config_);
-        if (!serial_driver_->port()->is_open()) {
-            serial_driver_->port()->open();
-        }
-    } catch (const std::exception & ex) {
-        RCLCPP_ERROR(
-            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
-        throw ex;
-    }
-
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
 
     // 延时10ms
@@ -184,6 +173,17 @@ void ROS2_StandardRobotpp::serialPortProtect()
     std::cout << "\033[32m Start serialPortProtect! \033[0m" << std::endl;
 
     ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
+
+    try {
+        serial_driver_->init_port(device_name_, *device_config_);
+        if (!serial_driver_->port()->is_open()) {
+            serial_driver_->port()->open();
+        }
+    } catch (const std::exception & ex) {
+        RCLCPP_ERROR(
+            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
+        throw ex;
+    }
 
     while (rclcpp::ok()) {
         try {
