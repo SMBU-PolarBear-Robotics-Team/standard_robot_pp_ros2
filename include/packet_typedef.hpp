@@ -23,6 +23,10 @@ struct HeaderFrame
     uint8_t crc;
 } __attribute__((packed));
 
+/********************************************************/
+/* Receive data                                         */
+/********************************************************/
+
 // 串口调试数据包
 struct ReceiveDebugData
 {
@@ -109,6 +113,54 @@ struct ReceiveRobotInfoData
 
     uint16_t crc;
 } __attribute__((packed));
+
+/********************************************************/
+/* Send data                                            */
+/********************************************************/
+
+struct SendRobotCmdData
+{
+    HeaderFrame frame_header;
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        struct
+        {
+            float vx;
+            float vy;
+            float wz;
+        } __attribute__((packed)) speed_vector;
+
+        struct
+        {
+            float roll;
+            float pitch;
+            float yaw;
+            float leg_lenth;
+        } __attribute__((packed)) chassis;
+
+        struct
+        {
+            float pitch;
+            float yaw;
+        } __attribute__((packed)) gimbal;
+
+        struct
+        {
+            uint8_t fire;
+            uint8_t fric_on;
+        } __attribute__((packed)) shoot;
+
+    } __attribute__((packed)) data;
+
+    uint16_t checksum;
+} __attribute__((packed));
+
+/********************************************************/
+/* template                                             */
+/********************************************************/
 
 template <typename T>
 inline T fromVector(const std::vector<uint8_t> & data)
