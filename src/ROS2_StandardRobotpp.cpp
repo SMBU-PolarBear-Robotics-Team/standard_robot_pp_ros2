@@ -254,6 +254,8 @@ void ROS2_StandardRobotpp::receiveData()
                     std_msgs::msg::Float64 stm32_run_time;
                     stm32_run_time.data = imu_data.time_stamp / 1000.0;
                     stm32_run_time_pub_->publish(stm32_run_time);
+
+                    publishImuData(imu_data);
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
@@ -288,6 +290,9 @@ void ROS2_StandardRobotpp::receiveData()
 void ROS2_StandardRobotpp::createPublisher()
 {
     stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
+    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+
+    imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_data)
@@ -324,6 +329,42 @@ void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_da
         debug_data.data = received_debug_data.packages[i].data;
         debug_pub->publish(debug_data);
     }
+}
+
+void ROS2_StandardRobotpp::publishImuData(ReceiveImuData & imu_data)
+{
+    auto imu_msg = sensor_msgs::msg::Imu();
+    // Convert Euler angles to quaternion
+    tf2::Quaternion q;
+    q.setRPY(imu_data.data.roll, imu_data.data.pitch, imu_data.data.yaw);
+    // Set the header
+    imu_msg.header.stamp.sec = imu_data.time_stamp / 1000;
+    imu_msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
+    imu_msg.header.frame_id = "odom";
+    // Set the orientation
+    imu_msg.orientation.x = q.x();
+    imu_msg.orientation.y = q.y();
+    imu_msg.orientation.z = q.z();
+    imu_msg.orientation.w = q.w();
+    // Set the angular velocity
+    imu_msg.angular_velocity.x = imu_data.data.roll_vel;
+    imu_msg.angular_velocity.y = imu_data.data.pitch_vel;
+    imu_msg.angular_velocity.z = imu_data.data.yaw_vel;
+    // Set the linear acceleration
+    // imu_msg.linear_acceleration.x = imu_data.data.x_accel;
+    // imu_msg.linear_acceleration.y = imu_data.data.y_accel;
+    // imu_msg.linear_acceleration.z = imu_data.data.z_accel;
+    // Publish the message
+    imu_pub_->publish(imu_msg);
+
+    // Publish the transform to visualize the IMU in Foxglove Studio
+    geometry_msgs::msg::TransformStamped t;
+    imu_msg.header.stamp.sec = imu_data.time_stamp / 1000;
+    imu_msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
+    t.header.frame_id = "odom";
+    t.child_frame_id = "imu";
+    t.transform.rotation = tf2::toMsg(q);
+    imu_tf_broadcaster_->sendTransform(t);
 }
 
 }  // namespace ros2_standard_robot_pp
