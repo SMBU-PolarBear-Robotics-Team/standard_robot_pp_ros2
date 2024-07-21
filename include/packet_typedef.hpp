@@ -12,6 +12,8 @@ const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;
 const uint8_t ID_ROBOT_INFO = 0x03;
 
+const uint8_t ID_ROBOT_CMD = 0x01;
+
 const uint8_t DEBUG_PACKAGE_NUM = 10;
 const uint8_t DEBUG_PACKAGE_NAME_LEN = 10;
 

@@ -401,6 +401,13 @@ void ROS2_StandardRobotpp::sendData()
     RCLCPP_INFO(get_logger(), "Start sendData!");
     std::cout << "\033[32m Start sendData! \033[0m" << std::endl;
 
+    SendRobotCmdData send_robot_cmd_data;
+    send_robot_cmd_data.frame_header.sof = SOF_SEND;
+    send_robot_cmd_data.frame_header.id = ID_ROBOT_CMD;
+    send_robot_cmd_data.frame_header.len = sizeof(SendRobotCmdData) - 6;
+    crc8::append_CRC8_check_sum(  //添加帧头crc8校验
+        reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
+
     while (rclcpp::ok()) {
         try {
             std::cout << "sending..." << std::endl;
