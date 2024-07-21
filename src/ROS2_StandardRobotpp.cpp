@@ -51,22 +51,6 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     getParams();
     createPublisher();
 
-    // Create Publisher
-    //   latency_pub_ = this->create_publisher<std_msgs::msg::Float64>("/latency", 10);
-    //   marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/aiming_point", 10);
-
-    //   try {
-    //     serial_driver_->init_port(device_name_, *device_config_);
-    //     if (!serial_driver_->port()->is_open()) {
-    //       serial_driver_->port()->open();
-    //       receive_thread_ = std::thread(&RMSerialDriver::receiveData, this);
-    //     }
-    //   } catch (const std::exception & ex) {
-    //     RCLCPP_ERROR(
-    //       get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
-    //     throw ex;
-    //   }
-
     // Create Subscription
     //   target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
     //     "/tracker/target", rclcpp::SensorDataQoS(),
@@ -252,6 +236,8 @@ void ROS2_StandardRobotpp::receiveData()
                     } else {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
                     }
+
+                    publishDebugData(debug_data);
                 } break;
                 case ID_IMU: {
                     ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
@@ -268,11 +254,6 @@ void ROS2_StandardRobotpp::receiveData()
                     std_msgs::msg::Float64 stm32_run_time;
                     stm32_run_time.data = imu_data.time_stamp / 1000.0;
                     stm32_run_time_pub_->publish(stm32_run_time);
-
-                    std_msgs::msg::Float64 debug_data;
-                    debug_data.data = imu_data.data.pitch;
-                    debug_pub_->publish(debug_data);
-
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
@@ -307,7 +288,42 @@ void ROS2_StandardRobotpp::receiveData()
 void ROS2_StandardRobotpp::createPublisher()
 {
     stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
-    debug_pub_ = this->create_publisher<std_msgs::msg::Float64>("/debug", 10);
+}
+
+void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_data)
+{
+    static rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub;
+    for (int i = 0; i < DEBUG_PACKAGE_NUM; i++) {
+        // Create a vector to hold the non-zero data
+        std::vector<uint8_t> non_zero_data;
+        for (size_t j = 0; j < DEBUG_PACKAGE_NAME_LEN; j++) {
+            if (received_debug_data.packages[i].name[j] != 0) {
+                non_zero_data.push_back(received_debug_data.packages[i].name[j]);
+            } else {
+                break;
+            }
+        }
+        // Convert the non-zero data to a string
+        std::string name(non_zero_data.begin(), non_zero_data.end());
+
+        if (name.empty()) {
+            continue;
+        }
+        std::cout << "name: " << name << std::endl;
+
+        if (debug_pub_map_.find(name) != debug_pub_map_.end()) {  // The key is in the map
+            debug_pub = debug_pub_map_.at(name);
+        } else {  // The key is not in the map
+            std::string topic_name = "/debug/" + name;
+            // Create a new publisher
+            debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
+            debug_pub_map_.insert(std::make_pair(name, debug_pub));  // Create a new key-value pair
+        }
+
+        std_msgs::msg::Float64 debug_data;
+        debug_data.data = received_debug_data.packages[i].data;
+        debug_pub->publish(debug_data);
+    }
 }
 
 }  // namespace ros2_standard_robot_pp

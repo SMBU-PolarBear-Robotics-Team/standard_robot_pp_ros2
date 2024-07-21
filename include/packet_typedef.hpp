@@ -12,15 +12,17 @@ const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;
 const uint8_t ID_ROBOT_INFO = 0x03;
 
+const uint8_t DEBUG_PACKAGE_NUM = 10;
+const uint8_t DEBUG_PACKAGE_NAME_LEN = 10;
+
 struct HeaderFrame
 {
-  uint8_t sof;
-  uint8_t len;
-  uint8_t id;
-  uint8_t crc;
+    uint8_t sof;
+    uint8_t len;
+    uint8_t id;
+    uint8_t crc;
 } __attribute__((packed));
 
-#define DEBUG_PACKAGE_NUM 10
 // 串口调试数据包
 struct ReceiveDebugData
 {
@@ -30,7 +32,7 @@ struct ReceiveDebugData
 
     struct
     {
-        uint8_t name[10];
+        uint8_t name[DEBUG_PACKAGE_NAME_LEN];
         uint8_t type;
         float data;
     } __attribute__((packed)) packages[DEBUG_PACKAGE_NUM];
@@ -111,19 +113,19 @@ struct ReceiveRobotInfoData
 template <typename T>
 inline T fromVector(const std::vector<uint8_t> & data)
 {
-  T packet;
-  std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
-  return packet;
+    T packet;
+    std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
+    return packet;
 }
 
 template <typename T>
 inline std::vector<uint8_t> toVector(const T & data)
 {
-  std::vector<uint8_t> packet(sizeof(T));
-  std::copy(
-    reinterpret_cast<const uint8_t *>(&data), reinterpret_cast<const uint8_t *>(&data) + sizeof(T),
-    packet.begin());
-  return packet;
+    std::vector<uint8_t> packet(sizeof(T));
+    std::copy(
+        reinterpret_cast<const uint8_t *>(&data),
+        reinterpret_cast<const uint8_t *>(&data) + sizeof(T), packet.begin());
+    return packet;
 }
 
 }  // namespace ros2_standard_robot_pp

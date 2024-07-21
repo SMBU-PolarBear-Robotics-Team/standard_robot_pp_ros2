@@ -35,6 +35,8 @@
 #include <thread>
 #include <vector>
 
+#include "packet_typedef.hpp"
+
 namespace ros2_standard_robot_pp
 {
 class ROS2_StandardRobotpp : public rclcpp::Node
@@ -49,6 +51,9 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
     void getParams();
 
+    // Debug data related
+    std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr> debug_pub_map_;
+
     // Serial port
     std::string device_name_;
     std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
@@ -57,8 +62,8 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     // Publisher
     rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr
         stm32_run_time_pub_;  // 发布STM32运行时间，数据基于接收到的imu数据时间戳
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub_;
     void createPublisher();
+    void publishDebugData(ReceiveDebugData & debug_data);
 
     // receive_thread
     std::thread receive_thread_;
