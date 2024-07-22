@@ -187,6 +187,23 @@ void ROS2_StandardRobotpp::getParams()
 
     device_config_ =
         std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
+
+    try {
+        send_sof_ = declare_parameter<int>("send_sof", 0x5A);
+    } catch (rclcpp::ParameterTypeException & ex) {
+        RCLCPP_ERROR(get_logger(), "The send_sof provided was invalid");
+        throw ex;
+    }
+
+    try {
+        receive_sof_ = declare_parameter<int>("receive_sof", 0x5A);
+    } catch (rclcpp::ParameterTypeException & ex) {
+        RCLCPP_ERROR(get_logger(), "The receive_sof provided was invalid");
+        throw ex;
+    }
+
+    std::cout << "send_sof: " << std::hex << (int)send_sof_ << std::endl;
+    std::cout << "receive_sof: " << std::hex << (int)receive_sof_ << std::endl;
 }
 
 /********************************************************/
@@ -243,7 +260,7 @@ void ROS2_StandardRobotpp::receiveData()
         try {
             serial_driver_->port()->receive(sof);
 
-            if (sof[0] != SOF_RECEIVE) {
+            if (sof[0] != receive_sof_) {
                 sof_count++;
                 std::cout << "Find sof, cnt=" << sof_count << std::endl;
                 continue;
@@ -431,7 +448,7 @@ void ROS2_StandardRobotpp::sendData()
     RCLCPP_INFO(get_logger(), "Start sendData!");
     std::cout << "\033[32m Start sendData! \033[0m" << std::endl;
 
-    send_robot_cmd_data_.frame_header.sof = SOF_SEND;
+    send_robot_cmd_data_.frame_header.sof = send_sof_;
     send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
     send_robot_cmd_data_.frame_header.len = sizeof(SendRobotCmdData) - 6;
     crc8::append_CRC8_check_sum(  //添加帧头crc8校验
