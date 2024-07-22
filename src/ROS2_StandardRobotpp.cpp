@@ -426,26 +426,21 @@ void ROS2_StandardRobotpp::sendData()
 
     while (rclcpp::ok()) {
         try {
-            // Get current ROS2 timestamp
-            rclcpp::Duration run_time = now() - node_start_time_stamp;
-            std::cout << "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
-            std::cout << "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
-
-            double sin_value = std::sin(run_time.seconds());  // 计算sin值
-            std::cout << "sin_value: " << sin_value << std::endl;
-
-            // 获取要发送的数据
-            send_robot_cmd_data_.data.speed_vector.vx = sin_value - 1;
-            send_robot_cmd_data_.data.speed_vector.vy = sin_value;
-            send_robot_cmd_data_.data.speed_vector.wz = sin_value + 1;
-
-            send_robot_cmd_data_.data.chassis.yaw = sin_value * 2 + 2;
-            send_robot_cmd_data_.data.chassis.pitch = sin_value * 2 + 3;
-            send_robot_cmd_data_.data.chassis.roll = sin_value * 2 + 4;
-            send_robot_cmd_data_.data.chassis.leg_lenth = sin_value * 2 + 5;
-
-            send_robot_cmd_data_.data.gimbal.yaw = sin_value * 3 + 6;
-            send_robot_cmd_data_.data.gimbal.pitch = sin_value * 3 + 7;
+            // use for test
+            // rclcpp::Duration run_time = now() - node_start_time_stamp;
+            // std::cout << "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
+            // std::cout << "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
+            // double sin_value = std::sin(run_time.seconds());  // 计算sin值
+            // std::cout << "sin_value: " << sin_value << std::endl;
+            // send_robot_cmd_data_.data.speed_vector.vx = sin_value - 1;
+            // send_robot_cmd_data_.data.speed_vector.vy = sin_value;
+            // send_robot_cmd_data_.data.speed_vector.wz = sin_value + 1;
+            // send_robot_cmd_data_.data.chassis.yaw = sin_value * 2 + 2;
+            // send_robot_cmd_data_.data.chassis.pitch = sin_value * 2 + 3;
+            // send_robot_cmd_data_.data.chassis.roll = sin_value * 2 + 4;
+            // send_robot_cmd_data_.data.chassis.leg_lenth = sin_value * 2 + 5;
+            // send_robot_cmd_data_.data.gimbal.yaw = sin_value * 3 + 6;
+            // send_robot_cmd_data_.data.gimbal.pitch = sin_value * 3 + 7;
 
             // 整包数据校验
             crc16::append_CRC16_check_sum(  //添加数据段crc16校验
