@@ -91,6 +91,8 @@ void ROS2_StandardRobotpp::createPublisher()
     stm32_run_time_pub_ =
         this->create_publisher<std_msgs::msg::Float64>("/srpp/stm32_run_time", 10);
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
+    robot_state_info_pub_ =
+        this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
     imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
@@ -323,7 +325,9 @@ void ROS2_StandardRobotpp::receiveData()
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&robot_info_data),
                         sizeof(ReceiveRobotInfoData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishRobotStateInfo(robot_info_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
                 } break;
@@ -406,6 +410,19 @@ void ROS2_StandardRobotpp::publishImuData(ReceiveImuData & imu_data)
     t.child_frame_id = "imu";
     t.transform.rotation = tf2::toMsg(q);
     imu_tf_broadcaster_->sendTransform(t);
+}
+
+void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_info)
+{
+    auto robot_state_info_msg = srpp_interfaces::msg::RobotStateInfo();
+    robot_state_info_msg.header.stamp.sec = robot_info.time_stamp / 1000;
+    robot_state_info_msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
+    robot_state_info_msg.header.frame_id = "odom";
+
+    robot_state_info_msg.models.chassis = "无";
+    robot_state_info_msg.models.gimbal = "无";
+
+    robot_state_info_pub_->publish(robot_state_info_msg);
 }
 
 /********************************************************/
