@@ -85,8 +85,6 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 
 void ROS2_StandardRobotpp::createPublisher()
 {
-    stm32_run_time_pub_ =
-        this->create_publisher<std_msgs::msg::Float64>("/srpp/stm32_run_time", 10);
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
     robot_state_info_pub_ =
         this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
@@ -307,10 +305,6 @@ void ROS2_StandardRobotpp::receiveData()
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     }
-
-                    std_msgs::msg::Float64 stm32_run_time;
-                    stm32_run_time.data = imu_data.time_stamp / 1000.0;
-                    stm32_run_time_pub_->publish(stm32_run_time);
 
                     publishImuData(imu_data);
                 } break;
