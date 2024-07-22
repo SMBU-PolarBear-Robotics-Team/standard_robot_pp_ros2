@@ -51,13 +51,7 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     node_start_time_stamp = now();
     getParams();
     createPublisher();
-
-    // Create Subscription
-    //   target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
-    //     "/tracker/target", rclcpp::SensorDataQoS(),
-    //     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
-    //   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    //     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
+    createSubscription();
 
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
 
