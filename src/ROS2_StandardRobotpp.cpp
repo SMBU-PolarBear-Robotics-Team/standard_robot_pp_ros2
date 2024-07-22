@@ -32,6 +32,7 @@
 
 #include "CRC8_CRC16.hpp"
 #include "ROS2_StandardRobotpp.hpp"
+#include "debug_for_srpp.hpp"
 #include "packet_typedef.hpp"
 
 namespace ros2_standard_robot_pp
@@ -46,17 +47,12 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
   serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
 {
     RCLCPP_INFO(get_logger(), "Start ROS2_StandardRobotpp!");
-    std::cout << "\033[32m Start ROS2_StandardRobotpp! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start ROS2_StandardRobotpp!");
 
+    node_start_time_stamp = now();
     getParams();
     createPublisher();
-
-    // Create Subscription
-    //   target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
-    //     "/tracker/target", rclcpp::SensorDataQoS(),
-    //     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
-    //   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    //     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
+    createSubscription();
 
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
 
@@ -69,8 +65,16 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 
 ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 {
+    if (send_thread_.joinable()) {
+        send_thread_.join();
+    }
+
     if (receive_thread_.joinable()) {
         receive_thread_.join();
+    }
+
+    if (serial_port_protect_thread_.joinable()) {
+        serial_port_protect_thread_.join();
     }
 
     if (serial_driver_->port()->is_open()) {
@@ -80,6 +84,21 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
     if (owned_ctx_) {
         owned_ctx_->waitForExit();
     }
+}
+
+void ROS2_StandardRobotpp::createPublisher()
+{
+    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
+    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+
+    imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+}
+
+void ROS2_StandardRobotpp::createSubscription()
+{
+    cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", 10,
+        std::bind(&ROS2_StandardRobotpp::updateCmdVel, this, std::placeholders::_1));
 }
 
 void ROS2_StandardRobotpp::getParams()
@@ -170,7 +189,7 @@ void ROS2_StandardRobotpp::getParams()
 void ROS2_StandardRobotpp::serialPortProtect()
 {
     RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
-    std::cout << "\033[32m Start serialPortProtect! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start serialPortProtect!");
 
     ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
 
@@ -178,6 +197,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
         serial_driver_->init_port(device_name_, *device_config_);
         if (!serial_driver_->port()->is_open()) {
             serial_driver_->port()->open();
+            std::cout << "\033[32m Serial port opened! \033[0m" << std::endl;
         }
     } catch (const std::exception & ex) {
         RCLCPP_ERROR(
@@ -205,7 +225,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
 void ROS2_StandardRobotpp::receiveData()
 {
     RCLCPP_INFO(get_logger(), "Start receiveData!");
-    std::cout << "\033[32m Start receiveData! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start receiveData!");
 
     std::vector<uint8_t> sof(1);
     std::vector<uint8_t> receive_data;
@@ -313,14 +333,6 @@ void ROS2_StandardRobotpp::receiveData()
     }
 }
 
-void ROS2_StandardRobotpp::createPublisher()
-{
-    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
-    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-
-    imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-}
-
 void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_data)
 {
     static rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub;
@@ -401,17 +413,53 @@ void ROS2_StandardRobotpp::sendData()
     RCLCPP_INFO(get_logger(), "Start sendData!");
     std::cout << "\033[32m Start sendData! \033[0m" << std::endl;
 
+    send_robot_cmd_data_.frame_header.sof = SOF_SEND;
+    send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
+    send_robot_cmd_data_.frame_header.len = sizeof(SendRobotCmdData) - 6;
+    crc8::append_CRC8_check_sum(  //添加帧头crc8校验
+        reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
+
     while (rclcpp::ok()) {
         try {
-            std::cout << "sending..." << std::endl;
-            ;
+            // use for test
+            // rclcpp::Duration run_time = now() - node_start_time_stamp;
+            // std::cout << "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
+            // std::cout << "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
+            // double sin_value = std::sin(run_time.seconds());  // 计算sin值
+            // std::cout << "sin_value: " << sin_value << std::endl;
+            // send_robot_cmd_data_.data.speed_vector.vx = sin_value - 1;
+            // send_robot_cmd_data_.data.speed_vector.vy = sin_value;
+            // send_robot_cmd_data_.data.speed_vector.wz = sin_value + 1;
+            // send_robot_cmd_data_.data.chassis.yaw = sin_value * 2 + 2;
+            // send_robot_cmd_data_.data.chassis.pitch = sin_value * 2 + 3;
+            // send_robot_cmd_data_.data.chassis.roll = sin_value * 2 + 4;
+            // send_robot_cmd_data_.data.chassis.leg_lenth = sin_value * 2 + 5;
+            // send_robot_cmd_data_.data.gimbal.yaw = sin_value * 3 + 6;
+            // send_robot_cmd_data_.data.gimbal.pitch = sin_value * 3 + 7;
+
+            // 整包数据校验
+            crc16::append_CRC16_check_sum(  //添加数据段crc16校验
+                reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(SendRobotCmdData));
+
+            // 发送数据
+            std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
+            serial_driver_->port()->send(send_data);
+
         } catch (const std::exception & ex) {
             RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
         }
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+}
+
+void ROS2_StandardRobotpp::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+    // 更新发送数据
+    send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
+    send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;
+    send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
 }
 
 }  // namespace ros2_standard_robot_pp

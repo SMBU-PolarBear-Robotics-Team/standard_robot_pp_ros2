@@ -11,16 +11,51 @@ ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人
   - 云台的朝向 pitch yaw
   - 底盘的姿态 roll pitch yaw leg_length
   - 发射机构状态 fire fric_on
+  - 话题:`\cmd_vel` : vx vy wz
 - **机器人数据接口：**
   - ...
 
+## 依赖
+
 ## 如何使用
 
-### 运行程序前
+1. [配置udev](./doc/appendix.md/#配置udev规则)，用来定向下位机串口硬件
+2. 构建程序
 
-1. [配置udev](./doc/appendix.md/#配置udev规则)
+    ```shell
+    colcon build --symlink-install
+    ```
 
-### 运行本程序
+3. 开放串口使用权限
+
+    ```shell
+    sudo chmod 777 /dev/ttyACM0
+    ```
+
+4. 运行程序
+
+    ```shell
+    ros2 launch ros2_standard_robot_pp ros2_standard_robot_pp.launch.py
+    ```
+
+## 更多玩法
+
+### 遥控车
+
+配合 [teleop_twist_keyboard](https://index.ros.org/p/teleop_twist_keyboard/github-ros2-teleop_twist_keyboard/#humble-overview) 使用键盘进行远程遥控。
+
+安装 `teleop_twist_keyboard` :
+
+```shell
+sudo apt update
+sudo apt install ros-humble-teleop-twist-keyboard
+```
+
+运行 `teleop_twist_keyboard` :
+
+```shell
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
 
 ## 附录
 
