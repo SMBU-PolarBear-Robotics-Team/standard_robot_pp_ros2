@@ -7,6 +7,8 @@
 
 namespace ros2_standard_robot_pp
 {
+const uint8_t SOF_RECEIVE = 0x5A;
+const uint8_t SOF_SEND = 0x5A;
 
 const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;

@@ -38,9 +38,6 @@
 namespace ros2_standard_robot_pp
 {
 
-#define SOF_RECEIVE 0x5A
-#define SOF_SEND 0x5A
-
 ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 : Node("ros2_standard_robot_pp", options),
   owned_ctx_{new IoContext(2)},
