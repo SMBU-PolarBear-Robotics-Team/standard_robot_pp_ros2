@@ -88,10 +88,18 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 
 void ROS2_StandardRobotpp::createPublisher()
 {
-    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/srpp/stm32_run_time", 10);
+    stm32_run_time_pub_ =
+        this->create_publisher<std_msgs::msg::Float64>("/srpp/stm32_run_time", 10);
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
 
     imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+}
+
+void ROS2_StandardRobotpp::createNewDebugPublisher(const std::string & name)
+{
+    std::string topic_name = "/srpp/debug/" + name;
+    auto debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
+    debug_pub_map_.insert(std::make_pair(name, debug_pub));
 }
 
 void ROS2_StandardRobotpp::createSubscription()
@@ -353,14 +361,10 @@ void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_da
             continue;
         }
 
-        if (debug_pub_map_.find(name) != debug_pub_map_.end()) {  // The key is in the map
-            debug_pub = debug_pub_map_.at(name);
-        } else {  // The key is not in the map
-            std::string topic_name = "/srpp/debug/" + name;
-            // Create a new publisher
-            debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
-            debug_pub_map_.insert(std::make_pair(name, debug_pub));  // Create a new key-value pair
+        if (debug_pub_map_.find(name) == debug_pub_map_.end()) {  // The key is not in the map
+            createNewDebugPublisher(name);
         }
+        debug_pub = debug_pub_map_.at(name);
 
         std_msgs::msg::Float64 debug_data;
         debug_data.data = received_debug_data.packages[i].data;

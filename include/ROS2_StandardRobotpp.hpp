@@ -70,6 +70,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;  // 发布imu的tf用于可视化
     void createPublisher();
+    void createNewDebugPublisher(const std::string & name);
     void publishDebugData(ReceiveDebugData & debug_data);
     void publishImuData(ReceiveImuData & imu_data);
 
