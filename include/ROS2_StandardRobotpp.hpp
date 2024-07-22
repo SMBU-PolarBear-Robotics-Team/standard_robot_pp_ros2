@@ -52,6 +52,9 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
     void getParams();
 
+    // Cmmand related
+    SendRobotCmdData send_robot_cmd_data;
+
     // Debug data related
     std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
         debug_pub_map_;
@@ -69,6 +72,11 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     void createPublisher();
     void publishDebugData(ReceiveDebugData & debug_data);
     void publishImuData(ReceiveImuData & imu_data);
+
+    // Subscribe
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    void createSubscription();
+    void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg);
 
     // receive_thread
     std::thread receive_thread_;

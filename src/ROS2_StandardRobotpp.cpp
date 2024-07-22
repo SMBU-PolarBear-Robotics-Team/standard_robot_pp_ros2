@@ -99,6 +99,13 @@ void ROS2_StandardRobotpp::createPublisher()
     imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
+void ROS2_StandardRobotpp::createSubscription()
+{
+    cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+        "/cmd_vel", 10,
+        std::bind(&ROS2_StandardRobotpp::updateCmdVel, this, std::placeholders::_1));
+}
+
 void ROS2_StandardRobotpp::getParams()
 {
     using FlowControl = drivers::serial_driver::FlowControl;
@@ -427,12 +434,12 @@ void ROS2_StandardRobotpp::sendData()
     while (rclcpp::ok()) {
         try {
             // Get current ROS2 timestamp
-            rclcpp::Duration run_time = now()-node_start_time_stamp;
-            std::cout<< "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
-            std::cout<< "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
+            rclcpp::Duration run_time = now() - node_start_time_stamp;
+            std::cout << "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
+            std::cout << "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
 
             double sin_value = std::sin(run_time.seconds());  // 计算sin值
-            std::cout<< "sin_value: " << sin_value << std::endl;
+            std::cout << "sin_value: " << sin_value << std::endl;
 
             // 获取要发送的数据
             send_robot_cmd_data.data.speed_vector.vx = sin_value - 1;
@@ -446,7 +453,7 @@ void ROS2_StandardRobotpp::sendData()
 
             send_robot_cmd_data.data.gimbal.yaw = sin_value * 3 + 6;
             send_robot_cmd_data.data.gimbal.pitch = sin_value * 3 + 7;
-            
+
             // 整包数据校验
             crc16::append_CRC16_check_sum(  //添加数据段crc16校验
                 reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
@@ -468,6 +475,14 @@ void ROS2_StandardRobotpp::sendData()
         // thread sleep
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+}
+
+void ROS2_StandardRobotpp::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+    // 更新发送数据
+    send_robot_cmd_data.data.speed_vector.vx = msg->linear.x;
+    send_robot_cmd_data.data.speed_vector.vy = msg->linear.y;
+    send_robot_cmd_data.data.speed_vector.wz = msg->angular.z;
 }
 
 }  // namespace ros2_standard_robot_pp
