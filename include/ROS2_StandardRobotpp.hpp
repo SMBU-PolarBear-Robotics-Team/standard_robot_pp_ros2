@@ -48,6 +48,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
   private:
     std::unique_ptr<IoContext> owned_ctx_;
+    rclcpp::Time node_start_time_stamp;
 
     void getParams();
 

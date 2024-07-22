@@ -48,6 +48,7 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     RCLCPP_INFO(get_logger(), "Start ROS2_StandardRobotpp!");
     std::cout << "\033[32m Start ROS2_StandardRobotpp! \033[0m" << std::endl;
 
+    node_start_time_stamp = now();
     getParams();
     createPublisher();
 
@@ -69,8 +70,16 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 
 ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 {
+    if (send_thread_.joinable()) {
+        send_thread_.join();
+    }
+
     if (receive_thread_.joinable()) {
         receive_thread_.join();
+    }
+
+    if (serial_port_protect_thread_.joinable()) {
+        serial_port_protect_thread_.join();
     }
 
     if (serial_driver_->port()->is_open()) {
@@ -178,6 +187,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
         serial_driver_->init_port(device_name_, *device_config_);
         if (!serial_driver_->port()->is_open()) {
             serial_driver_->port()->open();
+            std::cout << "\033[32m Serial port opened! \033[0m" << std::endl;
         }
     } catch (const std::exception & ex) {
         RCLCPP_ERROR(
@@ -267,6 +277,8 @@ void ROS2_StandardRobotpp::receiveData()
                         reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
+                    } else {
+                        std::cout << "\033[32m Receive Debug data! \033[0m" << std::endl;
                     }
 
                     publishDebugData(debug_data);
@@ -279,6 +291,8 @@ void ROS2_StandardRobotpp::receiveData()
                         reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
+                    } else {
+                        std::cout << "\033[32m Receive Imu data! \033[0m" << std::endl;
                     }
 
                     std_msgs::msg::Float64 stm32_run_time;
@@ -297,6 +311,8 @@ void ROS2_StandardRobotpp::receiveData()
                         sizeof(ReceiveRobotInfoData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
+                    } else {
+                        std::cout << "\033[32m Receive Robot info data! \033[0m" << std::endl;
                     }
                 } break;
                 default: {
@@ -406,18 +422,72 @@ void ROS2_StandardRobotpp::sendData()
     send_robot_cmd_data.frame_header.id = ID_ROBOT_CMD;
     send_robot_cmd_data.frame_header.len = sizeof(SendRobotCmdData) - 6;
     crc8::append_CRC8_check_sum(  //添加帧头crc8校验
-        reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
+        reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(HeaderFrame));
 
     while (rclcpp::ok()) {
         try {
-            std::cout << "sending..." << std::endl;
-            ;
+            // Get current ROS2 timestamp
+            rclcpp::Duration run_time = now()-node_start_time_stamp;
+            std::cout<< "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
+            std::cout<< "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
+
+            double sin_value = std::sin(run_time.seconds());  // 计算sin值
+            std::cout<< "sin_value: " << sin_value << std::endl;
+
+            // 获取要发送的数据
+            send_robot_cmd_data.data.speed_vector.vx = sin_value - 1;
+            send_robot_cmd_data.data.speed_vector.vy = sin_value;
+            send_robot_cmd_data.data.speed_vector.wz = sin_value + 1;
+
+            send_robot_cmd_data.data.chassis.yaw = sin_value * 2 + 2;
+            send_robot_cmd_data.data.chassis.pitch = sin_value * 2 + 3;
+            send_robot_cmd_data.data.chassis.roll = sin_value * 2 + 4;
+            send_robot_cmd_data.data.chassis.leg_lenth = sin_value * 2 + 5;
+
+            send_robot_cmd_data.data.gimbal.yaw = sin_value * 3 + 6;
+            send_robot_cmd_data.data.gimbal.pitch = sin_value * 3 + 7;
+
+            // send_robot_cmd_data.time_stamp = 0;
+
+            // send_robot_cmd_data.data.speed_vector.vx = 0;
+            // send_robot_cmd_data.data.speed_vector.vy = 0;
+            // send_robot_cmd_data.data.speed_vector.wz = 0;
+
+            // send_robot_cmd_data.data.chassis.yaw = 0;
+            // send_robot_cmd_data.data.chassis.pitch = 0;
+            // send_robot_cmd_data.data.chassis.roll = 0;
+            // send_robot_cmd_data.data.chassis.leg_lenth = 0;
+
+            // send_robot_cmd_data.data.gimbal.yaw = 0;
+            // send_robot_cmd_data.data.gimbal.pitch = 0;
+            
+            // 整包数据校验
+            crc16::append_CRC16_check_sum(  //添加数据段crc16校验
+                reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
+
+            // 输出发送数据（以字节为单位）
+            // std::cout << "Send data:        ";
+            // for (size_t i = 0; i < sizeof(SendRobotCmdData); i++) {
+            //     std::cout << std::hex << (int)(*((uint8_t *)(&send_robot_cmd_data) + i)) << " ";
+            // }
+            // std::cout << std::endl;
+
+            // 发送数据
+            std::vector<uint8_t> send_data = toVector(send_robot_cmd_data);
+            serial_driver_->port()->send(send_data);
+
+            // 输出发送数据（以字节为单位）
+            // std::cout << "Send data vector: ";
+            // for (size_t i = 0; i < send_data.size(); i++) {
+            //     std::cout << std::hex << (int)send_data[i] << " ";
+            // }
+            // std::cout<< std::endl;
         } catch (const std::exception & ex) {
             RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
         }
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
