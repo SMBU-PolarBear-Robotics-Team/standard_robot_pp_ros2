@@ -91,6 +91,14 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
     }
 }
 
+void ROS2_StandardRobotpp::createPublisher()
+{
+    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
+    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+
+    imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+}
+
 void ROS2_StandardRobotpp::getParams()
 {
     using FlowControl = drivers::serial_driver::FlowControl;
@@ -327,14 +335,6 @@ void ROS2_StandardRobotpp::receiveData()
         // thread sleep
         // std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
-}
-
-void ROS2_StandardRobotpp::createPublisher()
-{
-    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
-    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
-
-    imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_data)
