@@ -17,7 +17,6 @@
 
 #include <tf2_ros/transform_broadcaster.h>
 
-#include <cstdint>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <rclcpp/publisher.hpp>
@@ -51,8 +50,6 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
   private:
     rclcpp::Time node_start_time_stamp;
-    uint8_t send_sof_;
-    uint8_t receive_sof_;
 
     void getParams();
 

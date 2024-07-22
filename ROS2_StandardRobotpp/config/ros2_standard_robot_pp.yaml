@@ -5,5 +5,3 @@
     flow_control: none
     parity: none
     stop_bits: "1"
-    send_sof: 0x5A
-    receive_sof: 0x5A
