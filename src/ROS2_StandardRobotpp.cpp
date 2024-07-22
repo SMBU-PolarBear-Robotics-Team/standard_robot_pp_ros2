@@ -447,30 +447,9 @@ void ROS2_StandardRobotpp::sendData()
             send_robot_cmd_data.data.gimbal.yaw = sin_value * 3 + 6;
             send_robot_cmd_data.data.gimbal.pitch = sin_value * 3 + 7;
 
-            // send_robot_cmd_data.time_stamp = 0;
-
-            // send_robot_cmd_data.data.speed_vector.vx = 0;
-            // send_robot_cmd_data.data.speed_vector.vy = 0;
-            // send_robot_cmd_data.data.speed_vector.wz = 0;
-
-            // send_robot_cmd_data.data.chassis.yaw = 0;
-            // send_robot_cmd_data.data.chassis.pitch = 0;
-            // send_robot_cmd_data.data.chassis.roll = 0;
-            // send_robot_cmd_data.data.chassis.leg_lenth = 0;
-
-            // send_robot_cmd_data.data.gimbal.yaw = 0;
-            // send_robot_cmd_data.data.gimbal.pitch = 0;
-            
             // 整包数据校验
             crc16::append_CRC16_check_sum(  //添加数据段crc16校验
                 reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
-
-            // 输出发送数据（以字节为单位）
-            // std::cout << "Send data:        ";
-            // for (size_t i = 0; i < sizeof(SendRobotCmdData); i++) {
-            //     std::cout << std::hex << (int)(*((uint8_t *)(&send_robot_cmd_data) + i)) << " ";
-            // }
-            // std::cout << std::endl;
 
             // 发送数据
             std::vector<uint8_t> send_data = toVector(send_robot_cmd_data);
