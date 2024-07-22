@@ -32,6 +32,7 @@
 
 #include "CRC8_CRC16.hpp"
 #include "ROS2_StandardRobotpp.hpp"
+#include "debug_for_srpp.hpp"
 #include "packet_typedef.hpp"
 
 namespace ros2_standard_robot_pp
@@ -46,7 +47,7 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
   serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
 {
     RCLCPP_INFO(get_logger(), "Start ROS2_StandardRobotpp!");
-    std::cout << "\033[32m Start ROS2_StandardRobotpp! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start ROS2_StandardRobotpp!");
 
     node_start_time_stamp = now();
     getParams();
@@ -188,7 +189,7 @@ void ROS2_StandardRobotpp::getParams()
 void ROS2_StandardRobotpp::serialPortProtect()
 {
     RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
-    std::cout << "\033[32m Start serialPortProtect! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start serialPortProtect!");
 
     ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
 
@@ -224,7 +225,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
 void ROS2_StandardRobotpp::receiveData()
 {
     RCLCPP_INFO(get_logger(), "Start receiveData!");
-    std::cout << "\033[32m Start receiveData! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start receiveData!");
 
     std::vector<uint8_t> sof(1);
     std::vector<uint8_t> receive_data;
@@ -287,7 +288,7 @@ void ROS2_StandardRobotpp::receiveData()
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
                     } else {
-                        std::cout << "\033[32m Receive Debug data! \033[0m" << std::endl;
+                        debug_for_srpp::PrintGreenString("Receive Debug data!");
                     }
 
                     publishDebugData(debug_data);
@@ -301,7 +302,7 @@ void ROS2_StandardRobotpp::receiveData()
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     } else {
-                        std::cout << "\033[32m Receive Imu data! \033[0m" << std::endl;
+                        debug_for_srpp::PrintGreenString("Receive Imu data!");
                     }
 
                     std_msgs::msg::Float64 stm32_run_time;
@@ -321,7 +322,7 @@ void ROS2_StandardRobotpp::receiveData()
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     } else {
-                        std::cout << "\033[32m Receive Robot info data! \033[0m" << std::endl;
+                        debug_for_srpp::PrintGreenString("Receive Robot info data!");
                     }
                 } break;
                 default: {
@@ -450,12 +451,6 @@ void ROS2_StandardRobotpp::sendData()
             std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
             serial_driver_->port()->send(send_data);
 
-            // 输出发送数据（以字节为单位）
-            // std::cout << "Send data vector: ";
-            // for (size_t i = 0; i < send_data.size(); i++) {
-            //     std::cout << std::hex << (int)send_data[i] << " ";
-            // }
-            // std::cout<< std::endl;
         } catch (const std::exception & ex) {
             RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
         }
