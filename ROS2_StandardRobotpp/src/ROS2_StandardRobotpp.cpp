@@ -290,11 +290,11 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishDebugData(debug_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
                     }
-
-                    publishDebugData(debug_data);
                 } break;
                 case ID_IMU: {
                     ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
@@ -302,11 +302,11 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishImuData(imu_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     }
-
-                    publishImuData(imu_data);
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
