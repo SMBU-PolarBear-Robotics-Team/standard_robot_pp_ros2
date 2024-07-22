@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "packet_typedef.hpp"
+#include "robot_info.hpp"
 #include "srpp_interfaces/msg/robot_state_info.hpp"
 
 namespace ros2_standard_robot_pp
@@ -50,6 +51,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
   private:
     rclcpp::Time node_start_time_stamp;
+    RobotModels robot_models_;
 
     void getParams();
 

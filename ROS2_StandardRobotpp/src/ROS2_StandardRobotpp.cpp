@@ -51,6 +51,15 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     createPublisher();
     createSubscription();
 
+    // create robot models map
+    robot_models_.chassis = {
+        {0, "无底盘"}, {1, "麦轮底盘"}, {2, "全向轮底盘"}, {3, "舵轮底盘"}, {4, "平衡底盘"}};
+    robot_models_.gimbal = {{0, "无云台"}, {1, "yaw_pitch直连云台"}};
+    robot_models_.shoot = {{0, "无发射机构"}, {1, "摩擦轮+拨弹盘"}, {2, "气动+拨弹盘"}};
+    robot_models_.arm = {{0, "无机械臂"}, {1, "mini机械臂"}};
+    robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
+
+    // 启动线程
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
 
     // 延时10ms
@@ -410,8 +419,12 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
     robot_state_info_msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
     robot_state_info_msg.header.frame_id = "odom";
 
-    robot_state_info_msg.models.chassis = "无";
-    robot_state_info_msg.models.gimbal = "无";
+    robot_state_info_msg.models.chassis = robot_models_.chassis.at(robot_info.data.type.chassis);
+    robot_state_info_msg.models.gimbal = robot_models_.gimbal.at(robot_info.data.type.gimbal);
+    robot_state_info_msg.models.shoot = robot_models_.shoot.at(robot_info.data.type.shoot);
+    robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
+    robot_state_info_msg.models.custom_controller =
+        robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
 
     robot_state_info_pub_->publish(robot_state_info_msg);
 }
