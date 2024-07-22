@@ -287,8 +287,6 @@ void ROS2_StandardRobotpp::receiveData()
                         reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
-                    } else {
-                        debug_for_srpp::PrintGreenString("Receive Debug data!");
                     }
 
                     publishDebugData(debug_data);
@@ -301,8 +299,6 @@ void ROS2_StandardRobotpp::receiveData()
                         reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
-                    } else {
-                        debug_for_srpp::PrintGreenString("Receive Imu data!");
                     }
 
                     std_msgs::msg::Float64 stm32_run_time;
@@ -321,8 +317,6 @@ void ROS2_StandardRobotpp::receiveData()
                         sizeof(ReceiveRobotInfoData));
                     if (!crc16_ok) {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
-                    } else {
-                        debug_for_srpp::PrintGreenString("Receive Robot info data!");
                     }
                 } break;
                 default: {
