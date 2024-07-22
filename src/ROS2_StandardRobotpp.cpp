@@ -446,7 +446,7 @@ void ROS2_StandardRobotpp::sendData()
 
             send_robot_cmd_data.data.gimbal.yaw = sin_value * 3 + 6;
             send_robot_cmd_data.data.gimbal.pitch = sin_value * 3 + 7;
-
+            
             // 整包数据校验
             crc16::append_CRC16_check_sum(  //添加数据段crc16校验
                 reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
@@ -466,7 +466,7 @@ void ROS2_StandardRobotpp::sendData()
         }
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
 
