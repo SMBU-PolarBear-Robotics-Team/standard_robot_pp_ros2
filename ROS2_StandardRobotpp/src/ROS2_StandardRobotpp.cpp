@@ -38,9 +38,6 @@
 namespace ros2_standard_robot_pp
 {
 
-#define SOF_RECEIVE 0x5A
-#define SOF_SEND 0x5A
-
 ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 : Node("ros2_standard_robot_pp", options),
   owned_ctx_{new IoContext(2)},
@@ -54,6 +51,15 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
     createPublisher();
     createSubscription();
 
+    // create robot models map
+    robot_models_.chassis = {
+        {0, "无底盘"}, {1, "麦轮底盘"}, {2, "全向轮底盘"}, {3, "舵轮底盘"}, {4, "平衡底盘"}};
+    robot_models_.gimbal = {{0, "无云台"}, {1, "yaw_pitch直连云台"}};
+    robot_models_.shoot = {{0, "无发射机构"}, {1, "摩擦轮+拨弹盘"}, {2, "气动+拨弹盘"}};
+    robot_models_.arm = {{0, "无机械臂"}, {1, "mini机械臂"}};
+    robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
+
+    // 启动线程
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
 
     // 延时10ms
@@ -88,10 +94,18 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 
 void ROS2_StandardRobotpp::createPublisher()
 {
-    stm32_run_time_pub_ = this->create_publisher<std_msgs::msg::Float64>("/stm32_run_time", 10);
-    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/imu", 10);
+    imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
+    robot_state_info_pub_ =
+        this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
     imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+}
+
+void ROS2_StandardRobotpp::createNewDebugPublisher(const std::string & name)
+{
+    std::string topic_name = "/srpp/debug/" + name;
+    auto debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
+    debug_pub_map_.insert(std::make_pair(name, debug_pub));
 }
 
 void ROS2_StandardRobotpp::createSubscription()
@@ -285,11 +299,11 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishDebugData(debug_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
                     }
-
-                    publishDebugData(debug_data);
                 } break;
                 case ID_IMU: {
                     ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
@@ -297,15 +311,11 @@ void ROS2_StandardRobotpp::receiveData()
                     // 整包数据校验
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishImuData(imu_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
                     }
-
-                    std_msgs::msg::Float64 stm32_run_time;
-                    stm32_run_time.data = imu_data.time_stamp / 1000.0;
-                    stm32_run_time_pub_->publish(stm32_run_time);
-
-                    publishImuData(imu_data);
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
@@ -315,7 +325,9 @@ void ROS2_StandardRobotpp::receiveData()
                     bool crc16_ok = crc16::verify_CRC16_check_sum(
                         reinterpret_cast<uint8_t *>(&robot_info_data),
                         sizeof(ReceiveRobotInfoData));
-                    if (!crc16_ok) {
+                    if (crc16_ok) {
+                        publishRobotStateInfo(robot_info_data);
+                    } else {
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
                 } break;
@@ -353,14 +365,10 @@ void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_da
             continue;
         }
 
-        if (debug_pub_map_.find(name) != debug_pub_map_.end()) {  // The key is in the map
-            debug_pub = debug_pub_map_.at(name);
-        } else {  // The key is not in the map
-            std::string topic_name = "/debug/" + name;
-            // Create a new publisher
-            debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
-            debug_pub_map_.insert(std::make_pair(name, debug_pub));  // Create a new key-value pair
+        if (debug_pub_map_.find(name) == debug_pub_map_.end()) {  // The key is not in the map
+            createNewDebugPublisher(name);
         }
+        debug_pub = debug_pub_map_.at(name);
 
         std_msgs::msg::Float64 debug_data;
         debug_data.data = received_debug_data.packages[i].data;
@@ -402,6 +410,23 @@ void ROS2_StandardRobotpp::publishImuData(ReceiveImuData & imu_data)
     t.child_frame_id = "imu";
     t.transform.rotation = tf2::toMsg(q);
     imu_tf_broadcaster_->sendTransform(t);
+}
+
+void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_info)
+{
+    auto robot_state_info_msg = srpp_interfaces::msg::RobotStateInfo();
+    robot_state_info_msg.header.stamp.sec = robot_info.time_stamp / 1000;
+    robot_state_info_msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
+    robot_state_info_msg.header.frame_id = "odom";
+
+    robot_state_info_msg.models.chassis = robot_models_.chassis.at(robot_info.data.type.chassis);
+    robot_state_info_msg.models.gimbal = robot_models_.gimbal.at(robot_info.data.type.gimbal);
+    robot_state_info_msg.models.shoot = robot_models_.shoot.at(robot_info.data.type.shoot);
+    robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
+    robot_state_info_msg.models.custom_controller =
+        robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
+
+    robot_state_info_pub_->publish(robot_state_info_msg);
 }
 
 /********************************************************/

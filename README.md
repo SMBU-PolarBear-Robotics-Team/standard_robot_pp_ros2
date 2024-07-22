@@ -20,7 +20,7 @@ ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人
 ## 如何使用
 
 1. [配置udev](./doc/appendix.md/#配置udev规则)，用来定向下位机串口硬件
-2. 构建程序
+2. 构建程序（工作空间中打开命令行）
 
     ```shell
     colcon build --symlink-install
@@ -35,7 +35,14 @@ ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人
 4. 运行程序
 
     ```shell
+    source install/setup.sh
     ros2 launch ros2_standard_robot_pp ros2_standard_robot_pp.launch.py
+    ```
+5. 使用foxglove可视化（打开一个新命令行）
+
+    ```shell
+    source install/setup.sh
+    ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
     ```
 
 ## 更多玩法
