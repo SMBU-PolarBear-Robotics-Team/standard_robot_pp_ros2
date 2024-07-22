@@ -424,12 +424,11 @@ void ROS2_StandardRobotpp::sendData()
     RCLCPP_INFO(get_logger(), "Start sendData!");
     std::cout << "\033[32m Start sendData! \033[0m" << std::endl;
 
-    SendRobotCmdData send_robot_cmd_data;
-    send_robot_cmd_data.frame_header.sof = SOF_SEND;
-    send_robot_cmd_data.frame_header.id = ID_ROBOT_CMD;
-    send_robot_cmd_data.frame_header.len = sizeof(SendRobotCmdData) - 6;
+    send_robot_cmd_data_.frame_header.sof = SOF_SEND;
+    send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
+    send_robot_cmd_data_.frame_header.len = sizeof(SendRobotCmdData) - 6;
     crc8::append_CRC8_check_sum(  //添加帧头crc8校验
-        reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(HeaderFrame));
+        reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
     while (rclcpp::ok()) {
         try {
@@ -442,24 +441,24 @@ void ROS2_StandardRobotpp::sendData()
             std::cout << "sin_value: " << sin_value << std::endl;
 
             // 获取要发送的数据
-            send_robot_cmd_data.data.speed_vector.vx = sin_value - 1;
-            send_robot_cmd_data.data.speed_vector.vy = sin_value;
-            send_robot_cmd_data.data.speed_vector.wz = sin_value + 1;
+            send_robot_cmd_data_.data.speed_vector.vx = sin_value - 1;
+            send_robot_cmd_data_.data.speed_vector.vy = sin_value;
+            send_robot_cmd_data_.data.speed_vector.wz = sin_value + 1;
 
-            send_robot_cmd_data.data.chassis.yaw = sin_value * 2 + 2;
-            send_robot_cmd_data.data.chassis.pitch = sin_value * 2 + 3;
-            send_robot_cmd_data.data.chassis.roll = sin_value * 2 + 4;
-            send_robot_cmd_data.data.chassis.leg_lenth = sin_value * 2 + 5;
+            send_robot_cmd_data_.data.chassis.yaw = sin_value * 2 + 2;
+            send_robot_cmd_data_.data.chassis.pitch = sin_value * 2 + 3;
+            send_robot_cmd_data_.data.chassis.roll = sin_value * 2 + 4;
+            send_robot_cmd_data_.data.chassis.leg_lenth = sin_value * 2 + 5;
 
-            send_robot_cmd_data.data.gimbal.yaw = sin_value * 3 + 6;
-            send_robot_cmd_data.data.gimbal.pitch = sin_value * 3 + 7;
+            send_robot_cmd_data_.data.gimbal.yaw = sin_value * 3 + 6;
+            send_robot_cmd_data_.data.gimbal.pitch = sin_value * 3 + 7;
 
             // 整包数据校验
             crc16::append_CRC16_check_sum(  //添加数据段crc16校验
-                reinterpret_cast<uint8_t *>(&send_robot_cmd_data), sizeof(SendRobotCmdData));
+                reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(SendRobotCmdData));
 
             // 发送数据
-            std::vector<uint8_t> send_data = toVector(send_robot_cmd_data);
+            std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
             serial_driver_->port()->send(send_data);
 
             // 输出发送数据（以字节为单位）
@@ -480,9 +479,9 @@ void ROS2_StandardRobotpp::sendData()
 void ROS2_StandardRobotpp::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
     // 更新发送数据
-    send_robot_cmd_data.data.speed_vector.vx = msg->linear.x;
-    send_robot_cmd_data.data.speed_vector.vy = msg->linear.y;
-    send_robot_cmd_data.data.speed_vector.wz = msg->angular.z;
+    send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
+    send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;
+    send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
 }
 
 }  // namespace ros2_standard_robot_pp

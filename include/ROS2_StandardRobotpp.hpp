@@ -53,7 +53,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     void getParams();
 
     // Cmmand related
-    SendRobotCmdData send_robot_cmd_data;
+    SendRobotCmdData send_robot_cmd_data_;
 
     // Debug data related
     std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
