@@ -1,5 +1,5 @@
 string type
 string color
 bool attacked
-string hp
-string heat
+int64 hp
+int64 heat

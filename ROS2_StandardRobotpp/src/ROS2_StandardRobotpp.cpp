@@ -446,6 +446,12 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
     robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
     robot_state_info_msg.models.custom_controller =
         robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
+    
+    robot_state_info_msg.referee.type = "步兵";
+    robot_state_info_msg.referee.color = "red";
+    robot_state_info_msg.referee.attacked = robot_info.data.referee.attacked;
+    robot_state_info_msg.referee.hp = robot_info.data.referee.hp;
+    robot_state_info_msg.referee.heat = robot_info.data.referee.heat;
 
     robot_state_info_pub_->publish(robot_state_info_msg);
 }
