@@ -315,6 +315,11 @@ void ROS2_StandardRobotpp::receiveData()
             // 数据段读取完成后添加header_frame_buf到data_buf，得到完整数据包
             data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
+            if (header_frame.len<40) {
+                bool crc_ok = crc16::verify_CRC16_check_sum(data_buf);
+                std::cout << "crc16:" << crc_ok << std::endl;
+            }
+
             // 根据header_frame.id解析数据
             switch (header_frame.id) {
                 case ID_DEBUG: {

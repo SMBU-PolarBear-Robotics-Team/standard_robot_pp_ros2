@@ -62,7 +62,7 @@ uint8_t get_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length, uint8_
 /**
   * @brief          CRC8校验函数
   * @param[in]      pch_message: 数据
-  * @param[in]      dw_length: 数据和校验的长度
+  * @param[in]      dw_length: 数据的长度
   * @retval         真或者假
   */
 uint32_t verify_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length)
@@ -123,7 +123,7 @@ const uint16_t wCRC_table[256] = {
 /**
   * @brief          计算CRC16
   * @param[in]      pch_message: 数据
-  * @param[in]      dw_length: 数据和校验的长度
+  * @param[in]      dw_length: 数据的长度
   * @param[in]      wCRC:初始CRC16
   * @retval         计算完的CRC16
   */
@@ -191,16 +191,15 @@ uint16_t get_CRC16_check_sum(std::vector<uint8_t> & pchMessage, uint16_t wCRC)
     }
 
     uint8_t chData;
-    // uint16_t wCRC_ = wCRC;
+    // std::cout <<"\033[32m start for \033[0m"<< std::endl;
     for (const auto & data : pchMessage) {
         chData = data;
-        std::cout << (int)chData << " ";
-        // wCRC_ =
-        //     ((uint16_t)(wCRC_) >> 8) ^ wCRC_table[((uint16_t)(wCRC_) ^ (uint16_t)(chData)) & 0x00ff];
+        // std::cout << std::hex<<"chdata :"<< (int)chData<< std::endl;
         (wCRC) =
             ((uint16_t)(wCRC) >> 8) ^ wCRC_table[((wCRC) ^ (chData)) & 0x00ff];
+        // std::cout << std::hex<<"wCRC   :"<< (int)wCRC << std::endl;
     }
-    std::cout << std::endl;
+    // std::cout <<"\033[31m end for \033[0m"<< std::endl;
 
     std::cout << "wCRC: " << wCRC << std::endl;
     return wCRC;
@@ -208,7 +207,7 @@ uint16_t get_CRC16_check_sum(std::vector<uint8_t> & pchMessage, uint16_t wCRC)
 
 /**
   * @brief          CRC16校验函数
-  * @param[in]      pch_message: 数据
+  * @param[in]      pch_message: 数据+crc16校验码
   * @retval         真或者假
   */
 bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage)
@@ -218,10 +217,10 @@ bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage)
     }
     uint16_t wExpected = 0;
     uint32_t dwLength = pchMessage.size();
-    wExpected = get_CRC16_check_sum(pchMessage, CRC16_INIT);
+    wExpected = get_CRC16_check_sum(pchMessage.data(), dwLength - 2, CRC16_INIT);
 
-    std::cout << "wExpected: " << wExpected << std::endl;
-    std::cout << "dwLength: " << dwLength << std::endl;
+    // std::cout << "wExpected: " << wExpected << std::endl;
+    // std::cout << "dwLength: " << dwLength << std::endl;
 
     return (
         (wExpected & 0xff) == pchMessage[dwLength - 2] &&
