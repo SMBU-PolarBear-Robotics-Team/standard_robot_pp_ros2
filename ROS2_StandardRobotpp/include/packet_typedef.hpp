@@ -13,6 +13,10 @@ const uint8_t SOF_SEND = 0x5A;
 const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;
 const uint8_t ID_ROBOT_INFO = 0x03;
+const uint8_t ID_PID_DEBUG = 0x04;
+const uint8_t ID_ALL_ROBOT_HP = 0x05;
+const uint8_t ID_GAME_STATUS = 0x06;
+const uint8_t ID_ROBOT_MOTION = 0x07;
 
 const uint8_t ID_ROBOT_CMD = 0x01;
 
@@ -114,6 +118,90 @@ struct ReceiveRobotInfoData
             uint16_t hp;
             uint16_t heat;
         } __attribute__((packed)) referee;
+
+    } __attribute__((packed)) data;
+
+    uint16_t crc;
+} __attribute__((packed));
+
+// PID调参数据包
+struct ReceivePidDebugData
+{
+    HeaderFrame frame_header;  // id = 0x04
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        float fdb;
+        float ref;
+        float pid_out;
+    } __attribute__((packed)) data;
+
+    uint16_t crc;
+} __attribute__((packed));
+
+// 全场机器人hp信息数据包
+struct ReceiveAllRobotHpData
+{
+    HeaderFrame frame_header;  // id = 0x05
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        uint16_t red_1_robot_hp;
+        uint16_t red_2_robot_hp;
+        uint16_t red_3_robot_hp;
+        uint16_t red_4_robot_hp;
+        uint16_t red_5_robot_hp;
+        uint16_t red_7_robot_hp;
+        uint16_t red_outpost_hp;
+        uint16_t red_base_hp;
+        uint16_t blue_1_robot_hp;
+        uint16_t blue_2_robot_hp;
+        uint16_t blue_3_robot_hp;
+        uint16_t blue_4_robot_hp;
+        uint16_t blue_5_robot_hp;
+        uint16_t blue_7_robot_hp;
+        uint16_t blue_outpost_hp;
+        uint16_t blue_base_hp;
+    } __attribute__((packed)) data;
+
+    uint16_t crc;
+} __attribute__((packed));
+
+// 比赛信息数据包
+struct ReceiveGameStatusData
+{
+    HeaderFrame frame_header;  // id = 0x06
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        uint8_t game_progress;
+        uint16_t stage_remain_time;
+    } __attribute__((packed)) data;
+
+    uint16_t crc;
+} __attribute__((packed)) ;
+
+// 机器人运动数据包
+struct ReceiveRobotMotionData
+{
+    HeaderFrame frame_header;  // id = 0x07
+
+    uint32_t time_stamp;
+
+    struct
+    {
+        struct
+        {
+            float vx;
+            float vy;
+            float wz;
+        } __attribute__((packed)) speed_vector;
 
     } __attribute__((packed)) data;
 

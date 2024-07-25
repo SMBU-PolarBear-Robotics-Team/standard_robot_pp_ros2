@@ -354,6 +354,12 @@ void ROS2_StandardRobotpp::receiveData()
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
                 } break;
+                case ID_PID_DEBUG:
+                case ID_ALL_ROBOT_HP:
+                case ID_GAME_STATUS:
+                case ID_ROBOT_MOTION: {
+                    RCLCPP_WARN(get_logger(), "Not implemented yet!");
+                } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
                 } break;
