@@ -21,16 +21,23 @@
       "showFullMessageForDiff": false,
       "topicPath": "/srpp/robot_state_info"
     },
+    "RawMessages!yxtvte": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/srpp/robot_motion"
+    },
     "3D!rwzg8z": {
       "cameraState": {
         "perspective": true,
-        "distance": 2.0934790944640596,
-        "phi": 49.33605720122429,
-        "thetaOffset": 128.10520939734948,
+        "distance": 0.9698905049878866,
+        "phi": 49.33605720122489,
+        "thetaOffset": 128.10520939734982,
         "targetOffset": [
-          0.05572346158724542,
-          -0.0871254621106853,
-          -2.134121982554268e-16
+          -0.07298130212799339,
+          0.23288081997957805,
+          -1.9817189744192714e-16
         ],
         "target": [
           0,
@@ -103,7 +110,7 @@
     "Plot!2i0vx83": {
       "paths": [
         {
-          "value": "/srpp/debug/pitch.data",
+          "value": "/srpp/debug/data1.data",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
@@ -136,15 +143,22 @@
   "layout": {
     "first": {
       "direction": "column",
-      "second": "3D!rwzg8z",
+      "second": {
+        "first": "RawMessages!yxtvte",
+        "second": "3D!rwzg8z",
+        "direction": "row",
+        "splitPercentage": 45.26653372530477
+      },
       "first": {
         "first": "RawMessages!1kwoh2b",
         "second": "RawMessages!2npeoii",
-        "direction": "row"
+        "direction": "row",
+        "splitPercentage": 64.73629587696952
       },
       "splitPercentage": 49.306197964847364
     },
     "second": "Plot!2i0vx83",
-    "direction": "row"
+    "direction": "row",
+    "splitPercentage": 49.734826163818504
   }
 }
