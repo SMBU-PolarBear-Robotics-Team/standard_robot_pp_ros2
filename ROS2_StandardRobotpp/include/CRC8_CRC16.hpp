@@ -39,7 +39,7 @@ extern uint32_t verify_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength);
 
 extern void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength);
 
-extern uint16_t get_CRC16_check_sum(std::vector<uint8_t> & pchMessage, uint16_t wCRC);
+// 对vector重载
 
 extern bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage);
 }  // namespace crc16

@@ -176,34 +176,7 @@ void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength)
     pchMessage[dwLength - 1] = (uint8_t)((wCRC >> 8) & 0x00ff);
 }
 
-//// 以下是对std::vector<uint8_t>的重载，还在测试中，暂时不用
-
-/**
-  * @brief          计算CRC16
-  * @param[in]      pch_message: 数据
-  * @param[in]      wCRC:初始CRC16
-  * @retval         计算完的CRC16
-  */
-uint16_t get_CRC16_check_sum(std::vector<uint8_t> & pchMessage, uint16_t wCRC)
-{
-    if (pchMessage.empty()) {
-        return 0xFFFF;
-    }
-
-    uint8_t chData;
-    // std::cout <<"\033[32m start for \033[0m"<< std::endl;
-    for (const auto & data : pchMessage) {
-        chData = data;
-        // std::cout << std::hex<<"chdata :"<< (int)chData<< std::endl;
-        (wCRC) =
-            ((uint16_t)(wCRC) >> 8) ^ wCRC_table[((wCRC) ^ (chData)) & 0x00ff];
-        // std::cout << std::hex<<"wCRC   :"<< (int)wCRC << std::endl;
-    }
-    // std::cout <<"\033[31m end for \033[0m"<< std::endl;
-
-    std::cout << "wCRC: " << wCRC << std::endl;
-    return wCRC;
-}
+// 以下是对std::vector<uint8_t>的重载
 
 /**
   * @brief          CRC16校验函数
@@ -218,9 +191,6 @@ bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage)
     uint16_t wExpected = 0;
     uint32_t dwLength = pchMessage.size();
     wExpected = get_CRC16_check_sum(pchMessage.data(), dwLength - 2, CRC16_INIT);
-
-    // std::cout << "wExpected: " << wExpected << std::endl;
-    // std::cout << "dwLength: " << dwLength << std::endl;
 
     return (
         (wExpected & 0xff) == pchMessage[dwLength - 2] &&
