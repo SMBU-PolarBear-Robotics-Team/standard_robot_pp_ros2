@@ -94,6 +94,7 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 void ROS2_StandardRobotpp::createPublisher()
 {
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
+    all_robot_hp_pub_ = this->create_publisher<std_msgs::msg::Int64MultiArray>("/srpp/all_robot_hp", 10);
     robot_state_info_pub_ =
         this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
@@ -341,9 +342,9 @@ void ROS2_StandardRobotpp::receiveData()
                     RCLCPP_WARN(get_logger(), "Not implemented yet!");
                 } break;
                 case ID_ALL_ROBOT_HP: {
-                    // ReceiveAllRobotHpData all_robot_hp_data =
-                    //     fromVector<ReceiveAllRobotHpData>(data_buf);
-                    ;
+                    ReceiveAllRobotHpData all_robot_hp_data =
+                        fromVector<ReceiveAllRobotHpData>(data_buf);
+                    publishAllRobotHp(all_robot_hp_data);
                 } break;
                 case ID_GAME_STATUS: {
                     // ReceiveGameStatusData game_status_data =
@@ -455,6 +456,32 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
     robot_state_info_msg.referee.heat = robot_info.data.referee.heat;
 
     robot_state_info_pub_->publish(robot_state_info_msg);
+}
+
+void ROS2_StandardRobotpp::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
+{
+    auto all_robot_hp_msg = std_msgs::msg::Int64MultiArray();
+    all_robot_hp_msg.data = {
+        // clang-format off
+        all_robot_hp.data.red_1_robot_hp, 
+        all_robot_hp.data.red_2_robot_hp, 
+        all_robot_hp.data.red_3_robot_hp,
+        all_robot_hp.data.red_4_robot_hp, 
+        all_robot_hp.data.red_5_robot_hp, 
+        all_robot_hp.data.red_7_robot_hp,
+        all_robot_hp.data.red_outpost_hp,
+        all_robot_hp.data.red_base_hp,
+        all_robot_hp.data.blue_1_robot_hp,
+        all_robot_hp.data.blue_2_robot_hp,
+        all_robot_hp.data.blue_3_robot_hp,
+        all_robot_hp.data.blue_4_robot_hp,
+        all_robot_hp.data.blue_5_robot_hp,
+        all_robot_hp.data.blue_7_robot_hp,
+        all_robot_hp.data.blue_outpost_hp,
+        all_robot_hp.data.blue_base_hp,
+        // clang-format on
+    };
+    all_robot_hp_pub_->publish(all_robot_hp_msg);
 }
 
 /********************************************************/
