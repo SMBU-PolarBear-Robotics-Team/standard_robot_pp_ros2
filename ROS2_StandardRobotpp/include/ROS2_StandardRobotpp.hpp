@@ -52,6 +52,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
   private:
     rclcpp::Time node_start_time_stamp;
     RobotModels robot_models_;
+    bool usb_is_ok_;
 
     void getParams();
 
