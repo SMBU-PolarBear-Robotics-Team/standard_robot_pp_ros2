@@ -34,7 +34,7 @@ struct HeaderFrame
 // 串口调试数据包
 struct ReceiveDebugData
 {
-    HeaderFrame frame_header;
+    HeaderFrame frame_header;  // id = 0x01
 
     uint32_t time_stamp;
 
@@ -51,7 +51,7 @@ struct ReceiveDebugData
 // IMU 数据包
 struct ReceiveImuData
 {
-    HeaderFrame frame_header;
+    HeaderFrame frame_header;  // id = 0x02
 
     uint32_t time_stamp;
 
@@ -76,7 +76,7 @@ struct ReceiveImuData
 // 机器人信息数据包
 struct ReceiveRobotInfoData
 {
-    HeaderFrame frame_header;
+    HeaderFrame frame_header;  // id = 0x03
 
     uint32_t time_stamp;
 
@@ -105,13 +105,15 @@ struct ReceiveRobotInfoData
             uint8_t reserve : 3;
         } __attribute__((packed)) state;
 
-        /// @brief 机器人运动状态 12 bytes
+        /// @brief 机器人裁判系统信息 7 bytes
         struct
         {
-            float vx;  // m/s
-            float vy;  // m/s
-            float wz;  // rad/s
-        } __attribute__((packed)) speed_vector;
+            uint8_t id;
+            uint8_t color;  // 0-red 1-blue 2-unknown
+            bool attacked;
+            uint16_t hp;
+            uint16_t heat;
+        } __attribute__((packed)) referee;
 
     } __attribute__((packed)) data;
 
