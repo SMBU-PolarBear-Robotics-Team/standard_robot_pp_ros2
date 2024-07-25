@@ -354,11 +354,50 @@ void ROS2_StandardRobotpp::receiveData()
                         RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
                     }
                 } break;
-                case ID_PID_DEBUG:
-                case ID_ALL_ROBOT_HP:
-                case ID_GAME_STATUS:
-                case ID_ROBOT_MOTION: {
+                case ID_PID_DEBUG: {
                     RCLCPP_WARN(get_logger(), "Not implemented yet!");
+                } break;
+                case ID_ALL_ROBOT_HP: {
+                    ReceiveAllRobotHpData all_robot_hp_data =
+                        fromVector<ReceiveAllRobotHpData>(data_buf);
+
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&all_robot_hp_data),
+                        sizeof(ReceiveAllRobotHpData));
+                    if (crc16_ok) {
+                        ;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "All robot hp data crc16 error!");
+                    }
+                } break;
+                case ID_GAME_STATUS: {
+                    ReceiveGameStatusData game_status_data =
+                        fromVector<ReceiveGameStatusData>(data_buf);
+
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&game_status_data),
+                        sizeof(ReceiveGameStatusData));
+                    if (crc16_ok) {
+                        ;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "All robot hp data crc16 error!");
+                    }
+                } break;
+                case ID_ROBOT_MOTION: {
+                    ReceiveRobotMotionData robot_motion_data =
+                        fromVector<ReceiveRobotMotionData>(data_buf);
+
+                    // 整包数据校验
+                    bool crc16_ok = crc16::verify_CRC16_check_sum(
+                        reinterpret_cast<uint8_t *>(&robot_motion_data),
+                        sizeof(ReceiveRobotMotionData));
+                    if (crc16_ok) {
+                        ;
+                    } else {
+                        RCLCPP_ERROR(get_logger(), "Robot motion data crc16 error!");
+                    }
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -452,7 +491,7 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
     robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
     robot_state_info_msg.models.custom_controller =
         robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
-    
+
     robot_state_info_msg.referee.type = "步兵";
     robot_state_info_msg.referee.color = "red";
     robot_state_info_msg.referee.attacked = robot_info.data.referee.attacked;
