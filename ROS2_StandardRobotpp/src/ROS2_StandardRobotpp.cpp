@@ -95,6 +95,8 @@ void ROS2_StandardRobotpp::createPublisher()
 {
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
     all_robot_hp_pub_ = this->create_publisher<std_msgs::msg::Int64MultiArray>("/srpp/all_robot_hp", 10);
+    game_progress_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/game_progress", 10);
+    stage_remain_time_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/stage_remain_time", 10);
     robot_state_info_pub_ =
         this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
@@ -347,9 +349,9 @@ void ROS2_StandardRobotpp::receiveData()
                     publishAllRobotHp(all_robot_hp_data);
                 } break;
                 case ID_GAME_STATUS: {
-                    // ReceiveGameStatusData game_status_data =
-                    //     fromVector<ReceiveGameStatusData>(data_buf);
-                    ;
+                    ReceiveGameStatusData game_status_data =
+                        fromVector<ReceiveGameStatusData>(data_buf);
+                    publishGameStatus(game_status_data);
                 } break;
                 case ID_ROBOT_MOTION: {
                     // ReceiveRobotMotionData robot_motion_data =
@@ -482,6 +484,16 @@ void ROS2_StandardRobotpp::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_h
         // clang-format on
     };
     all_robot_hp_pub_->publish(all_robot_hp_msg);
+}
+
+void ROS2_StandardRobotpp::publishGameStatus(ReceiveGameStatusData & game_status)
+{
+    auto game_status_msg = std_msgs::msg::Int64();
+    game_status_msg.data = game_status.data.game_progress;
+    game_progress_pub_->publish(game_status_msg);
+
+    game_status_msg.data = game_status.data.stage_remain_time;
+    stage_remain_time_pub_->publish(game_status_msg);
 }
 
 /********************************************************/
