@@ -35,6 +35,9 @@
 #include "debug_for_srpp.hpp"
 #include "packet_typedef.hpp"
 
+#define USB_NOT_OK_SLEEP_TIME 1000   // (ms)
+#define USB_PROTECT_SLEEP_TIME 1000  // (ms)
+
 namespace ros2_standard_robot_pp
 {
 
@@ -61,10 +64,6 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
 
     // 启动线程
     serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
-
-    // 延时10ms
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
     receive_thread_ = std::thread(&ROS2_StandardRobotpp::receiveData, this);
     send_thread_ = std::thread(&ROS2_StandardRobotpp::sendData, this);
 }
@@ -95,6 +94,10 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
 void ROS2_StandardRobotpp::createPublisher()
 {
     imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
+    all_robot_hp_pub_ = this->create_publisher<std_msgs::msg::Int64MultiArray>("/srpp/all_robot_hp", 10);
+    game_progress_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/game_progress", 10);
+    stage_remain_time_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/stage_remain_time", 10);
+    robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/srpp/robot_motion", 10);
     robot_state_info_pub_ =
         this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
@@ -207,28 +210,45 @@ void ROS2_StandardRobotpp::serialPortProtect()
 
     ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
 
+    // 初始化串口
+    serial_driver_->init_port(device_name_, *device_config_);
+
+    //尝试打开串口
     try {
-        serial_driver_->init_port(device_name_, *device_config_);
         if (!serial_driver_->port()->is_open()) {
             serial_driver_->port()->open();
-            std::cout << "\033[32m Serial port opened! \033[0m" << std::endl;
+            debug_for_srpp::PrintGreenString("Serial port opened!");
+            usb_is_ok_ = true;
         }
     } catch (const std::exception & ex) {
-        RCLCPP_ERROR(
-            get_logger(), "Error creating serial port: %s - %s", device_name_.c_str(), ex.what());
-        throw ex;
+        RCLCPP_ERROR(get_logger(), "Open serial port failed : %s", ex.what());
+        usb_is_ok_ = false;
     }
 
+    usb_is_ok_ = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(USB_PROTECT_SLEEP_TIME));
+
     while (rclcpp::ok()) {
-        try {
-            std::cout << "protecting..." << std::endl;
-            ;
-        } catch (const std::exception & ex) {
-            RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
-        }
+        if (!usb_is_ok_) {
+            try {
+                if (serial_driver_->port()->is_open()) {
+                    serial_driver_->port()->close();
+                }
+
+                serial_driver_->port()->open();
+
+                if (serial_driver_->port()->is_open()) {
+                    std::cout << "\033[32m Serial port opened! \033[0m" << std::endl;
+                    usb_is_ok_ = true;
+                }
+            } catch (const std::exception & ex) {
+                usb_is_ok_ = false;
+                RCLCPP_ERROR(get_logger(), "Open serial port failed : %s", ex.what());
+            }
+        };
 
         // thread sleep
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(USB_PROTECT_SLEEP_TIME));
     }
 }
 
@@ -247,6 +267,13 @@ void ROS2_StandardRobotpp::receiveData()
     int sof_count = 0;
 
     while (rclcpp::ok()) {
+        if (!usb_is_ok_) {
+            std::cout << "reveive: usb is not ok!" << std::endl;
+            // thread sleep
+            std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
+            continue;
+        }
+
         try {
             serial_driver_->port()->receive(sof);
 
@@ -292,44 +319,45 @@ void ROS2_StandardRobotpp::receiveData()
             // 数据段读取完成后添加header_frame_buf到data_buf，得到完整数据包
             data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
-            // 根据header_frame.id解析数据
+            // 整包数据校验
+            bool crc16_ok = crc16::verify_CRC16_check_sum(data_buf);
+            if (!crc16_ok) {
+                RCLCPP_ERROR(get_logger(), "Data segment CRC16 error!");
+                continue;
+            }
+
+            //### crc16_ok 校验正确后根据header_frame.id解析数据
             switch (header_frame.id) {
                 case ID_DEBUG: {
                     ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                    if (crc16_ok) {
-                        publishDebugData(debug_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
-                    }
+                    publishDebugData(debug_data);
                 } break;
                 case ID_IMU: {
                     ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                    if (crc16_ok) {
-                        publishImuData(imu_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
-                    }
+                    publishImuData(imu_data);
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
                         fromVector<ReceiveRobotInfoData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&robot_info_data),
-                        sizeof(ReceiveRobotInfoData));
-                    if (crc16_ok) {
-                        publishRobotStateInfo(robot_info_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
-                    }
+                    publishRobotStateInfo(robot_info_data);
+                } break;
+                case ID_PID_DEBUG: {
+                    RCLCPP_WARN(get_logger(), "Not implemented yet!");
+                } break;
+                case ID_ALL_ROBOT_HP: {
+                    ReceiveAllRobotHpData all_robot_hp_data =
+                        fromVector<ReceiveAllRobotHpData>(data_buf);
+                    publishAllRobotHp(all_robot_hp_data);
+                } break;
+                case ID_GAME_STATUS: {
+                    ReceiveGameStatusData game_status_data =
+                        fromVector<ReceiveGameStatusData>(data_buf);
+                    publishGameStatus(game_status_data);
+                } break;
+                case ID_ROBOT_MOTION: {
+                    ReceiveRobotMotionData robot_motion_data =
+                        fromVector<ReceiveRobotMotionData>(data_buf);
+                    publishRobotMotion(robot_motion_data);
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -338,10 +366,8 @@ void ROS2_StandardRobotpp::receiveData()
 
         } catch (const std::exception & ex) {
             RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
+            usb_is_ok_ = false;
         }
-
-        // thread sleep
-        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
 
@@ -426,7 +452,58 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
     robot_state_info_msg.models.custom_controller =
         robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
 
+    robot_state_info_msg.referee.type = "步兵";
+    robot_state_info_msg.referee.color = "red";
+    robot_state_info_msg.referee.attacked = robot_info.data.referee.attacked;
+    robot_state_info_msg.referee.hp = robot_info.data.referee.hp;
+    robot_state_info_msg.referee.heat = robot_info.data.referee.heat;
+
     robot_state_info_pub_->publish(robot_state_info_msg);
+}
+
+void ROS2_StandardRobotpp::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
+{
+    auto all_robot_hp_msg = std_msgs::msg::Int64MultiArray();
+    all_robot_hp_msg.data = {
+        // clang-format off
+        all_robot_hp.data.red_1_robot_hp, 
+        all_robot_hp.data.red_2_robot_hp, 
+        all_robot_hp.data.red_3_robot_hp,
+        all_robot_hp.data.red_4_robot_hp, 
+        all_robot_hp.data.red_5_robot_hp, 
+        all_robot_hp.data.red_7_robot_hp,
+        all_robot_hp.data.red_outpost_hp,
+        all_robot_hp.data.red_base_hp,
+        all_robot_hp.data.blue_1_robot_hp,
+        all_robot_hp.data.blue_2_robot_hp,
+        all_robot_hp.data.blue_3_robot_hp,
+        all_robot_hp.data.blue_4_robot_hp,
+        all_robot_hp.data.blue_5_robot_hp,
+        all_robot_hp.data.blue_7_robot_hp,
+        all_robot_hp.data.blue_outpost_hp,
+        all_robot_hp.data.blue_base_hp,
+        // clang-format on
+    };
+    all_robot_hp_pub_->publish(all_robot_hp_msg);
+}
+
+void ROS2_StandardRobotpp::publishGameStatus(ReceiveGameStatusData & game_status)
+{
+    auto game_status_msg = std_msgs::msg::Int64();
+    game_status_msg.data = game_status.data.game_progress;
+    game_progress_pub_->publish(game_status_msg);
+
+    game_status_msg.data = game_status.data.stage_remain_time;
+    stage_remain_time_pub_->publish(game_status_msg);
+}
+
+void ROS2_StandardRobotpp::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
+{
+    auto robot_motion_msg = geometry_msgs::msg::Twist();
+    robot_motion_msg.linear.x = robot_motion.data.speed_vector.vx;
+    robot_motion_msg.linear.y = robot_motion.data.speed_vector.vy;
+    robot_motion_msg.angular.z = robot_motion.data.speed_vector.wz;
+    robot_motion_pub_->publish(robot_motion_msg);
 }
 
 /********************************************************/
@@ -436,7 +513,7 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
 void ROS2_StandardRobotpp::sendData()
 {
     RCLCPP_INFO(get_logger(), "Start sendData!");
-    std::cout << "\033[32m Start sendData! \033[0m" << std::endl;
+    debug_for_srpp::PrintGreenString("Start sendData!");
 
     send_robot_cmd_data_.frame_header.sof = SOF_SEND;
     send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
@@ -445,6 +522,13 @@ void ROS2_StandardRobotpp::sendData()
         reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
     while (rclcpp::ok()) {
+        if (!usb_is_ok_) {
+            std::cout << "send: usb is not ok!" << std::endl;
+            // thread sleep
+            std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
+            continue;
+        }
+
         try {
             // use for test
             // rclcpp::Duration run_time = now() - node_start_time_stamp;
@@ -471,7 +555,8 @@ void ROS2_StandardRobotpp::sendData()
             serial_driver_->port()->send(send_data);
 
         } catch (const std::exception & ex) {
-            RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
+            RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
+            usb_is_ok_ = false;
         }
 
         // thread sleep

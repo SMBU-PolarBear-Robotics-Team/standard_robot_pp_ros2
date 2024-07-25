@@ -26,6 +26,8 @@
 #include <serial_driver/serial_driver.hpp>
 #include <srpp_interfaces/msg/detail/robot_state_info__struct.hpp>
 #include <std_msgs/msg/float64.hpp>
+#include <std_msgs/msg/int64.hpp>
+#include <std_msgs/msg/int64_multi_array.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 // C++ system
@@ -52,6 +54,7 @@ class ROS2_StandardRobotpp : public rclcpp::Node
   private:
     rclcpp::Time node_start_time_stamp;
     RobotModels robot_models_;
+    bool usb_is_ok_;
 
     void getParams();
 
@@ -70,6 +73,10 @@ class ROS2_StandardRobotpp : public rclcpp::Node
 
     // Publish
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+    rclcpp::Publisher<std_msgs::msg::Int64MultiArray>::SharedPtr all_robot_hp_pub_;
+    rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr game_progress_pub_;
+    rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr stage_remain_time_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
     rclcpp::Publisher<srpp_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;  // 发布imu的tf用于可视化
     void createPublisher();
@@ -77,6 +84,9 @@ class ROS2_StandardRobotpp : public rclcpp::Node
     void publishDebugData(ReceiveDebugData & debug_data);
     void publishImuData(ReceiveImuData & imu_data);
     void publishRobotStateInfo(ReceiveRobotInfoData & robot_info);
+    void publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp);
+    void publishGameStatus(ReceiveGameStatusData & game_status);
+    void publishRobotMotion(ReceiveRobotMotionData & robot_motion);
 
     // Subscribe
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;

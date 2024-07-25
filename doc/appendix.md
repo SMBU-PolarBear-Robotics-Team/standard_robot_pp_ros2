@@ -32,8 +32,11 @@
    2. 写入udev规则，将我们的设备的别名配置为`ttyACM0`，这样如果我们的设备被检测到，系统就会在自动分配串口名称后通过该规则将设备配置一个别名`ttyACM0`。（将`idVendor`和`idProduct`替换为自己设备对应的id）
 
       ``` shell
-      SUBSYSTEMS=="usb", KERNEL=="ttyACM*", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", SYMLINK+="ttyACM0"
+      SUBSYSTEMS=="usb", KERNEL=="ttyACM*", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", SYMLINK+="ttyACM0", MODE="0777"
       ```
+
+      `SYMLINK+="ttyACM0"` 表示添加一个ttyACM0的符号链接\
+      `MODE="0777"` 表示赋予全部权限
 
    3. 按`ctrl+x`退出，按`y`保存文件
 
@@ -41,7 +44,8 @@
 
    ``` shell
    sudo udevadm control --reload-rules
+   sudo udevadm trigger
    ```
 
-4. 重新插拔设备，再输入`ls /dev/tty*`
-   - 即可看到`/dev/ttyACM1`和连接到的别名`/dev/ttyACM0`（蓝色的）
+<!-- 4. 重新插拔设备，再输入`ls /dev/tty*`
+   - 即可看到`/dev/ttyACM1`和连接到的别名`/dev/ttyACM0`（蓝色的） -->

@@ -1,0 +1,164 @@
+{
+  "configById": {
+    "RawMessages!1kwoh2b": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/srpp/imu",
+      "expansion": {
+        "header": "e",
+        "stamp~header": "e",
+        "orientation": "e",
+        "angular_velocity": "e",
+        "linear_acceleration": "c"
+      }
+    },
+    "RawMessages!2npeoii": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/srpp/robot_state_info"
+    },
+    "RawMessages!yxtvte": {
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "topicPath": "/srpp/robot_motion"
+    },
+    "3D!rwzg8z": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 0.9698905049878866,
+        "phi": 49.33605720122489,
+        "thetaOffset": 128.10520939734982,
+        "targetOffset": [
+          -0.07298130212799339,
+          0.23288081997957805,
+          -1.9817189744192714e-16
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "followTf": "odom",
+      "scene": {
+        "enableStats": false,
+        "transforms": {
+          "showLabel": true,
+          "editable": false
+        }
+      },
+      "transforms": {
+        "frame:odom": {
+          "visible": true
+        },
+        "frame:imu": {
+          "visible": true
+        }
+      },
+      "topics": {},
+      "layers": {
+        "dd97d52e-bc6e-4d28-a90f-4ba52674f7e1": {
+          "visible": true,
+          "frameLocked": true,
+          "label": "Grid",
+          "instanceId": "dd97d52e-bc6e-4d28-a90f-4ba52674f7e1",
+          "layerId": "foxglove.Grid",
+          "size": 10,
+          "divisions": 10,
+          "lineWidth": 1,
+          "color": "#248eff",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "order": 1
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {}
+    },
+    "Plot!2i0vx83": {
+      "paths": [
+        {
+          "value": "/srpp/debug/data1.data",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/srpp/debug/vx_set.data",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/srpp/debug/vy_set.data",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": {
+      "direction": "column",
+      "second": {
+        "first": "RawMessages!yxtvte",
+        "second": "3D!rwzg8z",
+        "direction": "row",
+        "splitPercentage": 45.26653372530477
+      },
+      "first": {
+        "first": "RawMessages!1kwoh2b",
+        "second": "RawMessages!2npeoii",
+        "direction": "row",
+        "splitPercentage": 64.73629587696952
+      },
+      "splitPercentage": 49.306197964847364
+    },
+    "second": "Plot!2i0vx83",
+    "direction": "row",
+    "splitPercentage": 49.734826163818504
+  }
+}
