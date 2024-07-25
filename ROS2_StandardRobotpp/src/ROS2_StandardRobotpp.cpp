@@ -97,6 +97,7 @@ void ROS2_StandardRobotpp::createPublisher()
     all_robot_hp_pub_ = this->create_publisher<std_msgs::msg::Int64MultiArray>("/srpp/all_robot_hp", 10);
     game_progress_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/game_progress", 10);
     stage_remain_time_pub_ = this->create_publisher<std_msgs::msg::Int64>("/srpp/stage_remain_time", 10);
+    robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/srpp/robot_motion", 10);
     robot_state_info_pub_ =
         this->create_publisher<srpp_interfaces::msg::RobotStateInfo>("/srpp/robot_state_info", 10);
 
@@ -354,9 +355,9 @@ void ROS2_StandardRobotpp::receiveData()
                     publishGameStatus(game_status_data);
                 } break;
                 case ID_ROBOT_MOTION: {
-                    // ReceiveRobotMotionData robot_motion_data =
-                    //     fromVector<ReceiveRobotMotionData>(data_buf);
-                    ;
+                    ReceiveRobotMotionData robot_motion_data =
+                        fromVector<ReceiveRobotMotionData>(data_buf);
+                    publishRobotMotion(robot_motion_data);
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -494,6 +495,15 @@ void ROS2_StandardRobotpp::publishGameStatus(ReceiveGameStatusData & game_status
 
     game_status_msg.data = game_status.data.stage_remain_time;
     stage_remain_time_pub_->publish(game_status_msg);
+}
+
+void ROS2_StandardRobotpp::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
+{
+    auto robot_motion_msg = geometry_msgs::msg::Twist();
+    robot_motion_msg.linear.x = robot_motion.data.speed_vector.vx;
+    robot_motion_msg.linear.y = robot_motion.data.speed_vector.vy;
+    robot_motion_msg.angular.z = robot_motion.data.speed_vector.wz;
+    robot_motion_pub_->publish(robot_motion_msg);
 }
 
 /********************************************************/
