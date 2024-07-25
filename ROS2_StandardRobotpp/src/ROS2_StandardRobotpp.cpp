@@ -315,94 +315,45 @@ void ROS2_StandardRobotpp::receiveData()
             // 数据段读取完成后添加header_frame_buf到data_buf，得到完整数据包
             data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
-            if (header_frame.len<40) {
-                bool crc_ok = crc16::verify_CRC16_check_sum(data_buf);
-                std::cout << "crc16:" << crc_ok << std::endl;
+            // 整包数据校验
+            bool crc16_ok = crc16::verify_CRC16_check_sum(data_buf);
+            if (!crc16_ok) {
+                RCLCPP_ERROR(get_logger(), "Data segment CRC16 error!");
+                continue;
             }
 
-            // 根据header_frame.id解析数据
+            //### crc16_ok 校验正确后根据header_frame.id解析数据
             switch (header_frame.id) {
                 case ID_DEBUG: {
                     ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&debug_data), sizeof(ReceiveDebugData));
-                    if (crc16_ok) {
-                        publishDebugData(debug_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Debug data crc16 error!");
-                    }
+                    publishDebugData(debug_data);
                 } break;
                 case ID_IMU: {
                     ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&imu_data), sizeof(ReceiveImuData));
-                    if (crc16_ok) {
-                        publishImuData(imu_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Imu data crc16 error!");
-                    }
+                    publishImuData(imu_data);
                 } break;
                 case ID_ROBOT_INFO: {
                     ReceiveRobotInfoData robot_info_data =
                         fromVector<ReceiveRobotInfoData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&robot_info_data),
-                        sizeof(ReceiveRobotInfoData));
-                    if (crc16_ok) {
-                        publishRobotStateInfo(robot_info_data);
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Robot info data crc16 error!");
-                    }
+                    publishRobotStateInfo(robot_info_data);
                 } break;
                 case ID_PID_DEBUG: {
                     RCLCPP_WARN(get_logger(), "Not implemented yet!");
                 } break;
                 case ID_ALL_ROBOT_HP: {
-                    ReceiveAllRobotHpData all_robot_hp_data =
-                        fromVector<ReceiveAllRobotHpData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&all_robot_hp_data),
-                        sizeof(ReceiveAllRobotHpData));
-                    if (crc16_ok) {
-                        ;
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "All robot hp data crc16 error!");
-                    }
+                    // ReceiveAllRobotHpData all_robot_hp_data =
+                    //     fromVector<ReceiveAllRobotHpData>(data_buf);
+                    ;
                 } break;
                 case ID_GAME_STATUS: {
-                    ReceiveGameStatusData game_status_data =
-                        fromVector<ReceiveGameStatusData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&game_status_data),
-                        sizeof(ReceiveGameStatusData));
-                    if (crc16_ok) {
-                        ;
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "All robot hp data crc16 error!");
-                    }
+                    // ReceiveGameStatusData game_status_data =
+                    //     fromVector<ReceiveGameStatusData>(data_buf);
+                    ;
                 } break;
                 case ID_ROBOT_MOTION: {
-                    ReceiveRobotMotionData robot_motion_data =
-                        fromVector<ReceiveRobotMotionData>(data_buf);
-
-                    // 整包数据校验
-                    bool crc16_ok = crc16::verify_CRC16_check_sum(
-                        reinterpret_cast<uint8_t *>(&robot_motion_data),
-                        sizeof(ReceiveRobotMotionData));
-                    if (crc16_ok) {
-                        ;
-                    } else {
-                        RCLCPP_ERROR(get_logger(), "Robot motion data crc16 error!");
-                    }
+                    // ReceiveRobotMotionData robot_motion_data =
+                    //     fromVector<ReceiveRobotMotionData>(data_buf);
+                    ;
                 } break;
                 default: {
                     RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
