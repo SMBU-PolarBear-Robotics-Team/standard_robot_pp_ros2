@@ -46,6 +46,3 @@
    sudo udevadm control --reload-rules
    sudo udevadm trigger
    ```
-
-<!-- 4. 重新插拔设备，再输入`ls /dev/tty*`
-   - 即可看到`/dev/ttyACM1`和连接到的别名`/dev/ttyACM0`（蓝色的） -->
