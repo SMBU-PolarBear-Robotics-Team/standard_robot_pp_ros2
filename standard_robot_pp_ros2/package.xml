@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ros2_standard_robot_pp</name>
+  <name>standard_robot_pp_ros2</name>
   <version>0.1.0</version>
   <description>StandardRobot++ Drive for ROS packages.</description>
   <maintainer email="1120220518@smbu.edu.cn">Penguin</maintainer>
   <maintainer email="lihanchen2004@163.com">Lihan Chen</maintainer>
   <license>MIT</license>
-  <url type="website">https://gitee.com/SMBU-POLARBEAR/ROS2_StandardRobotpp</url>
-  <url type="bugtracker">https://gitee.com/SMBU-POLARBEAR/ROS2_StandardRobotpp/issues</url>
+  <url type="website">https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2</url>
+  <url type="bugtracker">https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2/issues</url>
   <author email="1120220518@smbu.edu.cn">Penguin</author>
 
   <!-- buildtool_depend: dependencies of the build process -->

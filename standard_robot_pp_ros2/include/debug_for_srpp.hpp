@@ -1,5 +1,5 @@
-#ifndef ROS2_STANDARD_ROBOT_PP__DEBUG_FOR_SRPP_HPP_
-#define ROS2_STANDARD_ROBOT_PP__DEBUG_FOR_SRPP_HPP_
+#ifndef STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_
+#define STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_
 
 #include <iostream>
 #include <string>
@@ -38,4 +38,4 @@ inline void PrintYellowString(std::string str)
 }
 
 }  // namespace debug_for_srpp
-#endif  // ROS2_STANDARD_ROBOT_PP__DEBUG_FOR_SRPP_HPP_
+#endif  // STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_

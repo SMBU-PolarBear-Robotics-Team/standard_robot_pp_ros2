@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  * @file       ROS2_StandardRobotpp.hpp/cpp
+  * @file       standard_robot_pp_ros2.hpp/cpp
   * @brief      上下位机通信模块
   * @history
   *  Version    Date            Author          Modification
@@ -12,8 +12,8 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2024 Polarbear*************************
   */
-#ifndef ROS2_STANDARD_ROBOT_PP__ROS2_STANDARD_ROBOT_HPP_
-#define ROS2_STANDARD_ROBOT_PP__ROS2_STANDARD_ROBOT_HPP_
+#ifndef STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_
+#define STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_
 
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -29,14 +29,14 @@
 #include "robot_info.hpp"
 #include "srpp_interfaces/msg/robot_state_info.hpp"
 
-namespace ros2_standard_robot_pp
+namespace standard_robot_pp_ros2
 {
-class ROS2_StandardRobotpp : public rclcpp::Node
+class StandardRobotPpRos2Node : public rclcpp::Node
 {
 public:
-  explicit ROS2_StandardRobotpp(const rclcpp::NodeOptions & options);
+  explicit StandardRobotPpRos2Node(const rclcpp::NodeOptions & options);
 
-  ~ROS2_StandardRobotpp() override;
+  ~StandardRobotPpRos2Node() override;
 
 private:
   rclcpp::Time node_start_time_stamp;
@@ -65,7 +65,7 @@ private:
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr stage_remain_time_pub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
   rclcpp::Publisher<srpp_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
-  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;  // 发布imu的tf用于可视化
+  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
   void createPublisher();
   void createNewDebugPublisher(const std::string & name);
   void publishDebugData(ReceiveDebugData & debug_data);
@@ -92,6 +92,6 @@ private:
   std::thread serial_port_protect_thread_;
   void serialPortProtect();
 };
-}  // namespace ros2_standard_robot_pp
+}  // namespace standard_robot_pp_ros2
 
-#endif  // ROS2_STANDARD_ROBOT_PP__ROS2_STANDARD_ROBOT_HPP_
+#endif  // STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_

@@ -15,7 +15,7 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
-#include "CRC8_CRC16.hpp"
+#include "crc8_crc16.hpp"
 
 namespace crc8
 {

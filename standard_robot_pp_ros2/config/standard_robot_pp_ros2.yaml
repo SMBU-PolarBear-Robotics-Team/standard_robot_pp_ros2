@@ -1,4 +1,4 @@
-/ros2_standard_robot_pp:
+/standard_robot_pp_ros2:
   ros__parameters:
     device_name: /dev/ttyACM0
     baud_rate: 115200

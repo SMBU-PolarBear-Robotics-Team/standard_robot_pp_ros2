@@ -15,8 +15,8 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
-#ifndef CRC8_CRC16_HPP
-#define CRC8_CRC16_HPP
+#ifndef crc8_crc16_HPP
+#define crc8_crc16_HPP
 
 #include <cstdint>
 #include <vector>
@@ -42,4 +42,4 @@ extern void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength);
 
 extern bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage);
 }  // namespace crc16
-#endif  //CRC8_CRC16_HPP
+#endif  //crc8_crc16_HPP

@@ -9,16 +9,16 @@
 ![C++ Badge](https://img.shields.io/badge/-C%2B%2B-blue?style=flat&logo=c%2B%2B&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
-[![commit](https://svg.hamm.cn/gitee.svg?user=SMBU-POLARBEAR&project=ros2_standard_robot_pp&type=commit)](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp)
-[![fork](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp/badge/fork.svg?theme=dark)](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp)
-[![star](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp/badge/star.svg?theme=dark)](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp)
-[![release](https://svg.hamm.cn/gitee.svg?user=SMBU-POLARBEAR&project=ros2_standard_robot_pp&type=release)](https://gitee.com/SMBU-POLARBEAR/ros2_standard_robot_pp)
+[![commit](https://svg.hamm.cn/gitee.svg?user=SMBU-POLARBEAR&project=standard_robot_pp_ros2&type=commit)](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2)
+[![fork](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2/badge/fork.svg?theme=dark)](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2)
+[![star](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2/badge/star.svg?theme=dark)](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2)
+[![release](https://svg.hamm.cn/gitee.svg?user=SMBU-POLARBEAR&project=standard_robot_pp_ros2&type=release)](https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2)
 
 </div>
 
 ## 介绍
 
-ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人驱动，提供了机器人的控制接口、数据接口。
+standard_robot_pp_ros2 是配合 StandardRobot++ 下位机控制使用的机器人驱动，提供了机器人的控制接口、数据接口。
 
 - **机器人控制接口：**
   - 运动的速度向量 vx vy wz
@@ -44,7 +44,7 @@ ROS2 StandardRobot++ 是配合 StandardRobot++ 下位机控制使用的机器人
 
     ```shell
     source install/setup.sh
-    ros2 launch ros2_standard_robot_pp ros2_standard_robot_pp.launch.py
+    ros2 launch standard_robot_pp_ros2 standard_robot_pp_ros2.launch.py
     ```
 
 ## 更多玩法

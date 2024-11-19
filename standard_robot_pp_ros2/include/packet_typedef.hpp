@@ -1,10 +1,10 @@
-#ifndef ROS2_STANDARD_ROBOT_PP__PACKET_TYPEDEF_HPP_
-#define ROS2_STANDARD_ROBOT_PP__PACKET_TYPEDEF_HPP_
+#ifndef STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_
+#define STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_
 
 #include <cstdint>
 #include <vector>
 
-namespace ros2_standard_robot_pp
+namespace standard_robot_pp_ros2
 {
 const uint8_t SOF_RECEIVE = 0x5A;
 const uint8_t SOF_SEND = 0x5A;
@@ -273,6 +273,6 @@ inline std::vector<uint8_t> toVector(const T & data)
   return packet;
 }
 
-}  // namespace ros2_standard_robot_pp
+}  // namespace standard_robot_pp_ros2
 
-#endif  // ROS2_STANDARD_ROBOT_PP__PACKET_TYPEDEF_HPP_
+#endif  // STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_

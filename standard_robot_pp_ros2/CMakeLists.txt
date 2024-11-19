@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(ros2_standard_robot_pp)
+project(standard_robot_pp_ros2)
 
 ## Use C++14
 set(CMAKE_CXX_STANDARD 14)
@@ -24,12 +24,12 @@ ament_auto_find_build_dependencies()
 ###########
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
-  src/ROS2_StandardRobotpp.cpp
-  src/CRC8_CRC16.cpp
+  src/standard_robot_pp_ros2.cpp
+  src/crc8_crc16.cpp
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
-  PLUGIN ros2_standard_robot_pp::ROS2_StandardRobotpp
+  PLUGIN standard_robot_pp_ros2::StandardRobotPpRos2Node
   EXECUTABLE ${PROJECT_NAME}_node
 )
 

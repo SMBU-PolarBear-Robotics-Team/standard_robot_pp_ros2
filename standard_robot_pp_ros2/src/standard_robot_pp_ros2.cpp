@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  * @file       ROS2_StandardRobotpp.hpp/cpp
+  * @file       StandardRobotPpRos2Node.hpp/cpp
   * @brief      上下位机通信模块
   * @history
   *  Version    Date            Author          Modification
@@ -12,26 +12,26 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2024 Polarbear*************************
   */
-#include "ROS2_StandardRobotpp.hpp"
+#include "standard_robot_pp_ros2.hpp"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "CRC8_CRC16.hpp"
+#include "crc8_crc16.hpp"
 #include "debug_for_srpp.hpp"
 
 #define USB_NOT_OK_SLEEP_TIME 1000   // (ms)
 #define USB_PROTECT_SLEEP_TIME 1000  // (ms)
 
-namespace ros2_standard_robot_pp
+namespace standard_robot_pp_ros2
 {
 
-ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
-: Node("ros2_standard_robot_pp", options),
+StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & options)
+: Node("StandardRobotPpRos2Node", options),
   owned_ctx_{new IoContext(2)},
   serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
 {
-  RCLCPP_INFO(get_logger(), "Start ROS2_StandardRobotpp!");
-  debug_for_srpp::PrintGreenString("Start ROS2_StandardRobotpp!");
+  RCLCPP_INFO(get_logger(), "Start StandardRobotPpRos2Node!");
+  debug_for_srpp::PrintGreenString("Start StandardRobotPpRos2Node!");
 
   node_start_time_stamp = now();
   getParams();
@@ -47,12 +47,12 @@ ROS2_StandardRobotpp::ROS2_StandardRobotpp(const rclcpp::NodeOptions & options)
   robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
 
   // 启动线程
-  serial_port_protect_thread_ = std::thread(&ROS2_StandardRobotpp::serialPortProtect, this);
-  receive_thread_ = std::thread(&ROS2_StandardRobotpp::receiveData, this);
-  send_thread_ = std::thread(&ROS2_StandardRobotpp::sendData, this);
+  serial_port_protect_thread_ = std::thread(&StandardRobotPpRos2Node::serialPortProtect, this);
+  receive_thread_ = std::thread(&StandardRobotPpRos2Node::receiveData, this);
+  send_thread_ = std::thread(&StandardRobotPpRos2Node::sendData, this);
 }
 
-ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
+StandardRobotPpRos2Node::~StandardRobotPpRos2Node()
 {
   if (send_thread_.joinable()) {
     send_thread_.join();
@@ -75,7 +75,7 @@ ROS2_StandardRobotpp::~ROS2_StandardRobotpp()
   }
 }
 
-void ROS2_StandardRobotpp::createPublisher()
+void StandardRobotPpRos2Node::createPublisher()
 {
   imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/srpp/imu", 10);
   all_robot_hp_pub_ =
@@ -90,20 +90,20 @@ void ROS2_StandardRobotpp::createPublisher()
   imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
-void ROS2_StandardRobotpp::createNewDebugPublisher(const std::string & name)
+void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
 {
   std::string topic_name = "/srpp/debug/" + name;
   auto debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
   debug_pub_map_.insert(std::make_pair(name, debug_pub));
 }
 
-void ROS2_StandardRobotpp::createSubscription()
+void StandardRobotPpRos2Node::createSubscription()
 {
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    "/cmd_vel", 10, std::bind(&ROS2_StandardRobotpp::updateCmdVel, this, std::placeholders::_1));
+    "/cmd_vel", 10, std::bind(&StandardRobotPpRos2Node::updateCmdVel, this, std::placeholders::_1));
 }
 
-void ROS2_StandardRobotpp::getParams()
+void StandardRobotPpRos2Node::getParams()
 {
   using FlowControl = drivers::serial_driver::FlowControl;
   using Parity = drivers::serial_driver::Parity;
@@ -188,7 +188,7 @@ void ROS2_StandardRobotpp::getParams()
 /* Serial port protect                                  */
 /********************************************************/
 
-void ROS2_StandardRobotpp::serialPortProtect()
+void StandardRobotPpRos2Node::serialPortProtect()
 {
   RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
   debug_for_srpp::PrintGreenString("Start serialPortProtect!");
@@ -241,7 +241,7 @@ void ROS2_StandardRobotpp::serialPortProtect()
 /* Receive data                                         */
 /********************************************************/
 
-void ROS2_StandardRobotpp::receiveData()
+void StandardRobotPpRos2Node::receiveData()
 {
   RCLCPP_INFO(get_logger(), "Start receiveData!");
   debug_for_srpp::PrintGreenString("Start receiveData!");
@@ -351,7 +351,7 @@ void ROS2_StandardRobotpp::receiveData()
   }
 }
 
-void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_data)
+void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug_data)
 {
   static rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub;
   for (int i = 0; i < DEBUG_PACKAGE_NUM; i++) {
@@ -382,7 +382,7 @@ void ROS2_StandardRobotpp::publishDebugData(ReceiveDebugData & received_debug_da
   }
 }
 
-void ROS2_StandardRobotpp::publishImuData(ReceiveImuData & imu_data)
+void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
 {
   auto imu_msg = sensor_msgs::msg::Imu();
   // Convert Euler angles to quaternion
@@ -418,7 +418,7 @@ void ROS2_StandardRobotpp::publishImuData(ReceiveImuData & imu_data)
   imu_tf_broadcaster_->sendTransform(t);
 }
 
-void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_info)
+void StandardRobotPpRos2Node::publishRobotStateInfo(ReceiveRobotInfoData & robot_info)
 {
   auto robot_state_info_msg = srpp_interfaces::msg::RobotStateInfo();
   robot_state_info_msg.header.stamp.sec = robot_info.time_stamp / 1000;
@@ -441,7 +441,7 @@ void ROS2_StandardRobotpp::publishRobotStateInfo(ReceiveRobotInfoData & robot_in
   robot_state_info_pub_->publish(robot_state_info_msg);
 }
 
-void ROS2_StandardRobotpp::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
+void StandardRobotPpRos2Node::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
 {
   auto all_robot_hp_msg = std_msgs::msg::Int64MultiArray();
   all_robot_hp_msg.data = {
@@ -467,7 +467,7 @@ void ROS2_StandardRobotpp::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_h
   all_robot_hp_pub_->publish(all_robot_hp_msg);
 }
 
-void ROS2_StandardRobotpp::publishGameStatus(ReceiveGameStatusData & game_status)
+void StandardRobotPpRos2Node::publishGameStatus(ReceiveGameStatusData & game_status)
 {
   auto game_status_msg = std_msgs::msg::Int64();
   game_status_msg.data = game_status.data.game_progress;
@@ -477,7 +477,7 @@ void ROS2_StandardRobotpp::publishGameStatus(ReceiveGameStatusData & game_status
   stage_remain_time_pub_->publish(game_status_msg);
 }
 
-void ROS2_StandardRobotpp::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
+void StandardRobotPpRos2Node::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
 {
   auto robot_motion_msg = geometry_msgs::msg::Twist();
   robot_motion_msg.linear.x = robot_motion.data.speed_vector.vx;
@@ -490,7 +490,7 @@ void ROS2_StandardRobotpp::publishRobotMotion(ReceiveRobotMotionData & robot_mot
 /* Send data                                            */
 /********************************************************/
 
-void ROS2_StandardRobotpp::sendData()
+void StandardRobotPpRos2Node::sendData()
 {
   RCLCPP_INFO(get_logger(), "Start sendData!");
   debug_for_srpp::PrintGreenString("Start sendData!");
@@ -544,7 +544,7 @@ void ROS2_StandardRobotpp::sendData()
   }
 }
 
-void ROS2_StandardRobotpp::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+void StandardRobotPpRos2Node::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
   // 更新发送数据
   send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
@@ -552,11 +552,11 @@ void ROS2_StandardRobotpp::updateCmdVel(const geometry_msgs::msg::Twist::SharedP
   send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
 }
 
-}  // namespace ros2_standard_robot_pp
+}  // namespace standard_robot_pp_ros2
 
 #include "rclcpp_components/register_node_macro.hpp"
 
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(ros2_standard_robot_pp::ROS2_StandardRobotpp)
+RCLCPP_COMPONENTS_REGISTER_NODE(standard_robot_pp_ros2::StandardRobotPpRos2Node)
