@@ -2,9 +2,10 @@
 
 <div align=center>
 
-![Logo](https://gitee.com/SMBU-POLARBEAR/Organization_Information/blob/master/.pic/Logo6.png)
+![Logo](./doc/Logo6.png)
 
 [![Author](https://img.shields.io/badge/Author-小企鹅-orange.svg)](https://gitee.com/Ljw0401)
+[![Maintainer](https://img.shields.io/badge/Maintainer-LihanChen2004-orange.svg)](https://gitee.com/LihanChen2004)
 
 ![C++ Badge](https://img.shields.io/badge/-C%2B%2B-blue?style=flat&logo=c%2B%2B&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
@@ -21,13 +22,11 @@
 standard_robot_pp_ros2 是配合 StandardRobot++ 下位机控制使用的机器人驱动，提供了机器人的控制接口、数据接口。
 
 - **机器人控制接口：**
-  - 运动的速度向量 vx vy wz
-  - 云台的朝向 pitch yaw
-  - 底盘的姿态 roll pitch yaw leg_length
-  - 发射机构状态 fire fric_on
-  - 话题:`\cmd_vel` : vx vy wz
+  - ...
 - **机器人数据接口：**
   - ...
+
+和下位机通信部分的数据包参考 [protocol.md](./doc/protocol.md)
 
 ## 依赖
 
