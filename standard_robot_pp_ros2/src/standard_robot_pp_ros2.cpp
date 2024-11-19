@@ -489,7 +489,6 @@ void StandardRobotPpRos2Node::publishRobotMotion(ReceiveRobotMotionData & robot_
 /********************************************************/
 /* Send data                                            */
 /********************************************************/
-
 void StandardRobotPpRos2Node::sendData()
 {
   RCLCPP_INFO(get_logger(), "Start sendData!");
