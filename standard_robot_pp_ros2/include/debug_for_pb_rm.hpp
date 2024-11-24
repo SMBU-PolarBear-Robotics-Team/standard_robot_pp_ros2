@@ -1,11 +1,11 @@
-#ifndef STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_
-#define STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_
+#ifndef STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_pb_rm_HPP_
+#define STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_pb_rm_HPP_
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-namespace debug_for_srpp
+namespace debug_for_pb_rm
 {
 inline void OutputByByte(std::string str, std::vector<uint8_t> data)
 {
@@ -37,5 +37,5 @@ inline void PrintYellowString(std::string str)
   std::cout << "\033[33m" << str << "\033[0m" << std::endl;
 }
 
-}  // namespace debug_for_srpp
-#endif  // STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_SRPP_HPP_
+}  // namespace debug_for pb_rm
+#endif  // STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_pb_rm_HPP_

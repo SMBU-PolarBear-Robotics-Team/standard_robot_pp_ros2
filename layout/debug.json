@@ -5,7 +5,7 @@
       "diffMethod": "custom",
       "diffTopicPath": "",
       "showFullMessageForDiff": false,
-      "topicPath": "/srpp/imu",
+      "topicPath": "/pb_rm/imu",
       "expansion": {
         "header": "e",
         "stamp~header": "e",
@@ -19,14 +19,14 @@
       "diffMethod": "custom",
       "diffTopicPath": "",
       "showFullMessageForDiff": false,
-      "topicPath": "/srpp/robot_state_info"
+      "topicPath": "/pb_rm/robot_state_info"
     },
     "RawMessages!yxtvte": {
       "diffEnabled": false,
       "diffMethod": "custom",
       "diffTopicPath": "",
       "showFullMessageForDiff": false,
-      "topicPath": "/srpp/robot_motion"
+      "topicPath": "/pb_rm/robot_motion"
     },
     "3D!rwzg8z": {
       "cameraState": {
@@ -110,17 +110,17 @@
     "Plot!2i0vx83": {
       "paths": [
         {
-          "value": "/srpp/debug/data1.data",
+          "value": "/pb_rm/debug/data1.data",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/srpp/debug/vx_set.data",
+          "value": "/pb_rm/debug/vx_set.data",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/srpp/debug/vy_set.data",
+          "value": "/pb_rm/debug/vy_set.data",
           "enabled": true,
           "timestampMethod": "receiveTime"
         }
