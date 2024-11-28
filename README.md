@@ -31,6 +31,14 @@ standard_robot_pp_ros2 是配合 StandardRobot++ 下位机控制使用的机器�
 
 ## 依赖
 
+-  pb_rm_interfaces
+
+    自定义消息类型
+
+    ```sh
+    git clone https://gitee.com/SMBU-POLARBEAR/pb_rm_interfaces.git
+    ```
+
 ## 如何使用
 
 1. [配置udev](./doc/appendix.md/#配置udev规则)，用来定向下位机串口硬件和给予串口权限
