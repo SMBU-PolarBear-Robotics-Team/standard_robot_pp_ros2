@@ -18,8 +18,8 @@
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <geometry_msgs/msg/twist.hpp>
+#include <pb_rm_interfaces/msg/robot_status.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/imu.hpp>
 #include <serial_driver/serial_driver.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/int64.hpp>
@@ -29,6 +29,13 @@
 #include <pb_rm_interfaces/msg/event_data.hpp>
 #include <pb_rm_interfaces/msg/ground_robot_position.hpp>
 #include <pb_rm_interfaces/msg/rfid_status.hpp>
+#include <pb_rm_interfaces/msg/robot_status.hpp>
+#include <pb_rm_interfaces/msg/gimbal_cmd.hpp>
+#include <pb_rm_interfaces/msg/shoot_cmd.hpp>
+
+#include <sensor_msgs/msg/joint_state.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+
 
 #include "packet_typedef.hpp"
 #include "robot_info.hpp"
@@ -70,6 +77,10 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GroundRobotPosition>::SharedPtr ground_robot_position_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RfidStatus>::SharedPtr rfid_status_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::GimbalCmd>::SharedPtr gimbal_cmd_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::ShootCmd>::SharedPtr shoot_cmd_pub_;
+
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
 
@@ -78,12 +89,15 @@ private:
 
   void publishDebugData(ReceiveDebugData & debug_data);
   void publishImuData(ReceiveImuData & imu_data);
-  void publishEventData(ReceiveEventDate & event_data);
+  void publishEventData(ReceiveEventData & event_data);
   void publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp);
   void publishGameStatus(ReceiveGameStatusData & game_status);
   void publishRobotMotion(ReceiveRobotMotionData & robot_motion);
   void publishGroundRobotPosition(ReceiveGroundRobotPosition & ground_robot_position);
   void publishRfidStatus(ReceiveRfidStatus & rfid_status);
+  void publishRobotStatus(ReceiveRobotStatus & robot_status);
+  void publishGimbalCmd(ReceiveGimbalCmd & gimbal_cmd);
+  void publishShootCmd(ReceiveShootCmd & shoot_cmd);
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
