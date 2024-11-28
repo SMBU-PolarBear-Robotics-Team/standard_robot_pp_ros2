@@ -21,11 +21,9 @@
 #include <pb_rm_interfaces/msg/event_data.hpp>
 #include <pb_rm_interfaces/msg/game_robot_hp.hpp>
 #include <pb_rm_interfaces/msg/game_status.hpp>
-#include <pb_rm_interfaces/msg/gimbal_cmd.hpp>
 #include <pb_rm_interfaces/msg/ground_robot_position.hpp>
 #include <pb_rm_interfaces/msg/rfid_status.hpp>
 #include <pb_rm_interfaces/msg/robot_status.hpp>
-#include <pb_rm_interfaces/msg/shoot_cmd.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -74,8 +72,7 @@ private:
     ground_robot_position_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RfidStatus>::SharedPtr rfid_status_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
-  rclcpp::Publisher<pb_rm_interfaces::msg::GimbalCmd>::SharedPtr gimbal_cmd_pub_;
-  rclcpp::Publisher<pb_rm_interfaces::msg::ShootCmd>::SharedPtr shoot_cmd_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
 
@@ -91,8 +88,7 @@ private:
   void publishGroundRobotPosition(ReceiveGroundRobotPosition & ground_robot_position);
   void publishRfidStatus(ReceiveRfidStatus & rfid_status);
   void publishRobotStatus(ReceiveRobotStatus & robot_status);
-  void publishGimbalCmd(ReceiveGimbalCmd & gimbal_cmd);
-  void publishShootCmd(ReceiveShootCmd & shoot_cmd);
+  void publishJointState(ReceiveJointState & joint_state);
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
