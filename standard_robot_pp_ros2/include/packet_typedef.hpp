@@ -19,8 +19,7 @@ const uint8_t ID_ROBOT_MOTION = 0x07;
 const uint8_t ID_GROUND_ROBOT_POSITION = 0x08;
 const uint8_t ID_RFID_STASTUS = 0x09;
 const uint8_t ID_ROBOT_STATUS = 0x0A;
-const uint8_t ID_GIMBAL_CMD = 0x0B;
-const uint8_t ID_SHOOT_CMD = 0x0C;
+const uint8_t ID_JOINT_STATE = 0x0B;
 
 const uint8_t ID_ROBOT_CMD = 0x01;
 
@@ -202,6 +201,7 @@ struct ReceiveGroundRobotPosition
   uint16_t crc;
 } __attribute__((packed));
 
+// RFID 状态数据包
 struct ReceiveRfidStatus
 {
   HeaderFrame frame_header;  // id = 0x09
@@ -231,6 +231,7 @@ struct ReceiveRfidStatus
   uint16_t crc;
 } __attribute__((packed));
 
+// 机器人状态数据包
 struct ReceiveRobotStatus
 {
   HeaderFrame frame_header;  // id = 0x0A
@@ -259,27 +260,20 @@ struct ReceiveRobotStatus
   uint16_t crc;
 } __attribute__((packed));
 
-struct ReceiveGimbalCmd
+// 云台状态数据包
+struct ReceiveJointState
 {
   HeaderFrame frame_header;  // id = 0x0B
   uint32_t time_stamp;
 
-  float yaw;
-  float pitch;
+  struct
+  {
+    float pitch;
+    float yaw;
+  } __attribute__((packed)) data;
 
   uint16_t crc;
 } __attribute__((packed));
-
-struct ReceiveShootCmd
-{
-  HeaderFrame frame_header;  // id = 0x0C
-  uint32_t time_stamp;
-
-  uint8_t projectile_num;
-
-  uint16_t crc;
-} __attribute__((packed));
-
 /********************************************************/
 /* Send data                                            */
 /********************************************************/

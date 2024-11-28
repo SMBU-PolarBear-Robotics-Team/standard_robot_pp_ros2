@@ -92,10 +92,7 @@ void StandardRobotPpRos2Node::createPublisher()
     this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("/pb_rm/rfid_status", 10);
   robot_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("/pb_rm/robot_status", 10);
-  gimbal_cmd_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::GimbalCmd>("/pb_rm/gimbal_cmd", 10);
-  shoot_cmd_pub_ = this->create_publisher<pb_rm_interfaces::msg::ShootCmd>("/pb_rm/shoot_cmd", 10);
-
+  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/pb_rm/joint_state", 10);
   imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
@@ -360,19 +357,14 @@ void StandardRobotPpRos2Node::receiveData()
           ReceiveRobotStatus robot_status_data = fromVector<ReceiveRobotStatus>(data_buf);
           publishRobotStatus(robot_status_data);
         } break;
-        case ID_GIMBAL_CMD: {
-          ReceiveGimbalCmd gimbal_cmd_data = fromVector<ReceiveGimbalCmd>(data_buf);
-          publishGimbalCmd(gimbal_cmd_data);
-        } break;
-        case ID_SHOOT_CMD: {
-          ReceiveShootCmd shoot_cmd_data = fromVector<ReceiveShootCmd>(data_buf);
-          publishShootCmd(shoot_cmd_data);
+        case ID_JOINT_STATE: {
+          ReceiveJointState joint_state_data = fromVector<ReceiveJointState>(data_buf);
+          publishJointState(joint_state_data);
         } break;
         default: {
           RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
         } break;
       }
-
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
       usb_is_ok_ = false;
@@ -633,23 +625,21 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
   robot_status_pub_->publish(robot_status_msg);
 }
 
-void StandardRobotPpRos2Node::publishGimbalCmd(ReceiveGimbalCmd & gimbal_cmd)
+void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
 {
-  auto gimbal_cmd_msg = pb_rm_interfaces::msg::GimbalCmd();
+  auto joint_state_msg = sensor_msgs::msg::JointState();
 
-  gimbal_cmd_msg.yaw = gimbal_cmd.yaw;
-  gimbal_cmd_msg.pitch = gimbal_cmd.pitch;
+  joint_state_msg.position.resize(2);
+  joint_state_msg.name.resize(2);
+  joint_state_msg.header.stamp = now();
 
-  gimbal_cmd_pub_->publish(gimbal_cmd_msg);
-}
+  joint_state_msg.name[0] = "gimbal_pitch_joint";
+  joint_state_msg.position[0] = joint_state.data.pitch;
 
-void StandardRobotPpRos2Node::publishShootCmd(ReceiveShootCmd & shoot_cmd)
-{
-  auto shoot_cmd_msg = pb_rm_interfaces::msg::ShootCmd();
+  joint_state_msg.name[1] = "gimbal_yaw_joint";
+  joint_state_msg.position[1] = joint_state.data.yaw;
 
-  shoot_cmd_msg.projectile_num = shoot_cmd.projectile_num;
-
-  shoot_cmd_pub_->publish(shoot_cmd_msg);
+  joint_state_pub_->publish(joint_state_msg);
 }
 /********************************************************/
 /* Send data                                            */
