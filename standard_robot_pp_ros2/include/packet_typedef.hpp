@@ -22,7 +22,6 @@ const uint8_t ID_ROBOT_STATUS = 0x0A;
 const uint8_t ID_GIMBAL_CMD = 0x0B;
 const uint8_t ID_SHOOT_CMD = 0x0C;
 
-
 const uint8_t ID_ROBOT_CMD = 0x01;
 
 const uint8_t DEBUG_PACKAGE_NUM = 10;
@@ -96,7 +95,7 @@ struct ReceiveEventData
   uint8_t circular_highland;
   uint8_t trapezoidal_highland_3;
   uint8_t trapezoidal_highland_4;
- 
+
   uint8_t base_virtual_shield_remaining;
 
   uint16_t crc;
@@ -144,7 +143,7 @@ struct ReceiveAllRobotHpData
     uint16_t blue_base_hp;
   } __attribute__((packed)) data;
 
-    uint16_t crc;
+  uint16_t crc;
 } __attribute__((packed));
 
 // 比赛信息数据包
@@ -188,16 +187,16 @@ struct ReceiveGroundRobotPosition
 
   float hero_x;
   float hero_y;
-  
+
   float engineer_x;
   float engineer_y;
-  
+
   float standard_3_x;
   float standard_3_y;
-  
+
   float standard_4_x;
   float standard_4_y;
-  
+
   float standard_5_x;
   float standard_5_y;
   uint16_t crc;
@@ -208,27 +207,27 @@ struct ReceiveRfidStatus
   HeaderFrame frame_header;  // id = 0x09
   uint32_t time_stamp;
 
-  bool base_gain_point;                       // 己方基地增益点
-  bool circular_highland_gain_point;          // 己方环形高地增益点
-  bool enemy_circular_highland_gain_point;    // 对方环形高地增益点
-  bool friendly_r3_b3_gain_point;             // 己方 R3/B3 梯形高地增益点
-  bool enemy_r3_b3_gain_point;                // 对方 R3/B3 梯形高地增益点
-  bool friendly_r4_b4_gain_point;             // 己方 R4/B4 梯形高地增益点
-  bool enemy_r4_b4_gain_point;                // 对方 R4/B4 梯形高地增益点
-  bool energy_mechanism_gain_point;           // 己方能量机关激活点
-  bool friendly_fly_ramp_front_gain_point;    // 己方飞坡增益点（靠近己方一侧飞坡前）
-  bool friendly_fly_ramp_back_gain_point;     // 己方飞坡增益点（靠近己方一侧飞坡后）
-  bool enemy_fly_ramp_front_gain_point;       // 对方飞坡增益点（靠近对方一侧飞坡前）
-  bool enemy_fly_ramp_back_gain_point;        // 对方飞坡增益点（靠近对方一侧飞坡后）
-  bool friendly_outpost_gain_point;           // 己方前哨站增益点
-  bool friendly_healing_point;                // 己方补血点（检测到任一均视为激活）
-  bool friendly_sentry_patrol_area;           // 己方哨兵巡逻区
-  bool enemy_sentry_patrol_area;              // 对方哨兵巡逻区
-  bool friendly_big_resource_island;          // 己方大资源岛增益点
-  bool enemy_big_resource_island;             // 对方大资源岛增益点
-  bool friendly_exchange_area;                // 己方兑换区
-  bool center_gain_point;                     // 中心增益点 RFID 卡状态（仅 RMUL 适用），1 为已检测到
-  
+  bool base_gain_point;                     // 己方基地增益点
+  bool circular_highland_gain_point;        // 己方环形高地增益点
+  bool enemy_circular_highland_gain_point;  // 对方环形高地增益点
+  bool friendly_r3_b3_gain_point;           // 己方 R3/B3 梯形高地增益点
+  bool enemy_r3_b3_gain_point;              // 对方 R3/B3 梯形高地增益点
+  bool friendly_r4_b4_gain_point;           // 己方 R4/B4 梯形高地增益点
+  bool enemy_r4_b4_gain_point;              // 对方 R4/B4 梯形高地增益点
+  bool energy_mechanism_gain_point;         // 己方能量机关激活点
+  bool friendly_fly_ramp_front_gain_point;  // 己方飞坡增益点（靠近己方一侧飞坡前）
+  bool friendly_fly_ramp_back_gain_point;  // 己方飞坡增益点（靠近己方一侧飞坡后）
+  bool enemy_fly_ramp_front_gain_point;    // 对方飞坡增益点（靠近对方一侧飞坡前）
+  bool enemy_fly_ramp_back_gain_point;     // 对方飞坡增益点（靠近对方一侧飞坡后）
+  bool friendly_outpost_gain_point;        // 己方前哨站增益点
+  bool friendly_healing_point;             // 己方补血点（检测到任一均视为激活）
+  bool friendly_sentry_patrol_area;        // 己方哨兵巡逻区
+  bool enemy_sentry_patrol_area;           // 对方哨兵巡逻区
+  bool friendly_big_resource_island;       // 己方大资源岛增益点
+  bool enemy_big_resource_island;          // 对方大资源岛增益点
+  bool friendly_exchange_area;             // 己方兑换区
+  bool center_gain_point;  // 中心增益点 RFID 卡状态（仅 RMUL 适用），1 为已检测到
+
   uint16_t crc;
 } __attribute__((packed));
 
@@ -255,7 +254,7 @@ struct ReceiveRobotStatus
   uint8_t hp_deduction_reason;
 
   uint16_t projectile_allowance_17mm_1;
-  uint16_t remaining_gold_coin;   
+  uint16_t remaining_gold_coin;
 
   uint16_t crc;
 } __attribute__((packed));
@@ -277,7 +276,7 @@ struct ReceiveShootCmd
   uint32_t time_stamp;
 
   uint8_t projectile_num;
-  
+
   uint16_t crc;
 } __attribute__((packed));
 

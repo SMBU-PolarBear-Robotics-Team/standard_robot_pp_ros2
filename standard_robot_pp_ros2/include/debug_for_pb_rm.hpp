@@ -37,5 +37,5 @@ inline void PrintYellowString(std::string str)
   std::cout << "\033[33m" << str << "\033[0m" << std::endl;
 }
 
-}  // namespace debug_for pb_rm
+}  // namespace debug_for_pb_rm
 #endif  // STANDARD_ROBOT_PP_ROS2__DEBUG_FOR_pb_rm_HPP_

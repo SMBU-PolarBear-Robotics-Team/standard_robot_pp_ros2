@@ -34,7 +34,7 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   RCLCPP_INFO(get_logger(), "Start StandardRobotPpRos2Node!");
   debug_for_pb_rm::PrintGreenString("Start StandardRobotPpRos2Node!");
 
-  node_start_time_stamp = now();
+  node_start_time_stamp_ = now();
   getParams();
   createPublisher();
   createSubscription();
@@ -78,26 +78,23 @@ StandardRobotPpRos2Node::~StandardRobotPpRos2Node()
 
 void StandardRobotPpRos2Node::createPublisher()
 {
-  imu_pub_ = 
-    this->create_publisher<sensor_msgs::msg::Imu>("/pb_rm/imu", 10);
+  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/pb_rm/imu", 10);
   event_data_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::EventData>("/pb_rm/event_data", 10);
   all_robot_hp_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::GameRobotHP>("/pb_rm/all_robot_hp", 10);
   game_progress_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::GameStatus>("/pb_rm/game_progress", 10);
-  robot_motion_pub_ = 
-    this->create_publisher<geometry_msgs::msg::Twist>("/pb_rm/robot_motion", 10);
-  ground_robot_position_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::GroundRobotPosition>("/pb_rm/ground_robot_position", 10);
+  robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/pb_rm/robot_motion", 10);
+  ground_robot_position_pub_ = this->create_publisher<pb_rm_interfaces::msg::GroundRobotPosition>(
+    "/pb_rm/ground_robot_position", 10);
   rfid_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("/pb_rm/rfid_status", 10);
   robot_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("/pb_rm/robot_status", 10);
   gimbal_cmd_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::GimbalCmd>("/pb_rm/gimbal_cmd", 10);
-  shoot_cmd_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::ShootCmd>("/pb_rm/shoot_cmd", 10);
+  shoot_cmd_pub_ = this->create_publisher<pb_rm_interfaces::msg::ShootCmd>("/pb_rm/shoot_cmd", 10);
 
   imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
@@ -351,7 +348,8 @@ void StandardRobotPpRos2Node::receiveData()
           publishRobotMotion(robot_motion_data);
         } break;
         case ID_GROUND_ROBOT_POSITION: {
-          ReceiveGroundRobotPosition ground_robot_position_data = fromVector<ReceiveGroundRobotPosition>(data_buf);
+          ReceiveGroundRobotPosition ground_robot_position_data =
+            fromVector<ReceiveGroundRobotPosition>(data_buf);
           publishGroundRobotPosition(ground_robot_position_data);
         } break;
         case ID_RFID_STASTUS: {
@@ -453,19 +451,19 @@ void StandardRobotPpRos2Node::publishEventData(ReceiveEventData & event_data)
 {
   auto event_data_msg = pb_rm_interfaces::msg::EventData();
 
-  event_data_msg.supply_station_front = event_data.supply_station_front;  
-  event_data_msg.supply_station_internal = event_data.supply_station_internal;  
-  event_data_msg.supply_zone = event_data.supply_zone;           
-  event_data_msg.center_gain_zone = event_data.center_gain_zone;  
+  event_data_msg.supply_station_front = event_data.supply_station_front;
+  event_data_msg.supply_station_internal = event_data.supply_station_internal;
+  event_data_msg.supply_zone = event_data.supply_zone;
+  event_data_msg.center_gain_zone = event_data.center_gain_zone;
 
-  event_data_msg.small_energy = event_data.small_energy;  
-  event_data_msg.big_energy = event_data.big_energy;      
+  event_data_msg.small_energy = event_data.small_energy;
+  event_data_msg.big_energy = event_data.big_energy;
 
-  event_data_msg.circular_highland = event_data.circular_highland;  
-  event_data_msg.trapezoidal_highland_3 = event_data.trapezoidal_highland_3;  
-  event_data_msg.trapezoidal_highland_4 = event_data.trapezoidal_highland_4;  
+  event_data_msg.circular_highland = event_data.circular_highland;
+  event_data_msg.trapezoidal_highland_3 = event_data.trapezoidal_highland_3;
+  event_data_msg.trapezoidal_highland_4 = event_data.trapezoidal_highland_4;
 
-  event_data_msg.base_virtual_shield_remaining =event_data.base_virtual_shield_remaining;  
+  event_data_msg.base_virtual_shield_remaining = event_data.base_virtual_shield_remaining;
 
   event_data_pub_->publish(event_data_msg);
 }
@@ -536,7 +534,8 @@ void StandardRobotPpRos2Node::publishRobotMotion(ReceiveRobotMotionData & robot_
   robot_motion_pub_->publish(robot_motion_msg);
 }
 
-void StandardRobotPpRos2Node::publishGroundRobotPosition(ReceiveGroundRobotPosition & ground_robot_position)
+void StandardRobotPpRos2Node::publishGroundRobotPosition(
+  ReceiveGroundRobotPosition & ground_robot_position)
 {
   auto ground_robot_position_msg = pb_rm_interfaces::msg::GroundRobotPosition();
 
@@ -564,13 +563,15 @@ void StandardRobotPpRos2Node::publishRfidStatus(ReceiveRfidStatus & rfid_status)
 
   rfid_status_msg.base_gain_point = rfid_status.base_gain_point;
   rfid_status_msg.circular_highland_gain_point = rfid_status.circular_highland_gain_point;
-  rfid_status_msg.enemy_circular_highland_gain_point = rfid_status.enemy_circular_highland_gain_point;
-  rfid_status_msg.friendly_r3_b3_gain_point  = rfid_status.friendly_r3_b3_gain_point;
+  rfid_status_msg.enemy_circular_highland_gain_point =
+    rfid_status.enemy_circular_highland_gain_point;
+  rfid_status_msg.friendly_r3_b3_gain_point = rfid_status.friendly_r3_b3_gain_point;
   rfid_status_msg.enemy_r3_b3_gain_point = rfid_status.enemy_r3_b3_gain_point;
   rfid_status_msg.friendly_r4_b4_gain_point = rfid_status.friendly_r4_b4_gain_point;
   rfid_status_msg.enemy_r4_b4_gain_point = rfid_status.enemy_r4_b4_gain_point;
-  rfid_status_msg.energy_mechanism_gain_point = rfid_status.energy_mechanism_gain_point; 
-  rfid_status_msg.friendly_fly_ramp_front_gain_point = rfid_status.friendly_fly_ramp_front_gain_point;
+  rfid_status_msg.energy_mechanism_gain_point = rfid_status.energy_mechanism_gain_point;
+  rfid_status_msg.friendly_fly_ramp_front_gain_point =
+    rfid_status.friendly_fly_ramp_front_gain_point;
   rfid_status_msg.friendly_fly_ramp_back_gain_point = rfid_status.friendly_fly_ramp_back_gain_point;
   rfid_status_msg.enemy_fly_ramp_front_gain_point = rfid_status.enemy_fly_ramp_front_gain_point;
   rfid_status_msg.enemy_fly_ramp_back_gain_point = rfid_status.enemy_fly_ramp_back_gain_point;
@@ -605,8 +606,7 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
 
   robot_status.armor_id = robot_status.armor_id;
 
-  switch (robot_status.hp_deduction_reason)
-  {
+  switch (robot_status.hp_deduction_reason) {
     case 0:
       robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::ARMOR_HIT;
       break;
@@ -629,7 +629,7 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
 
   robot_status.projectile_allowance_17mm_1 = robot_status.projectile_allowance_17mm_1;
   robot_status.remaining_gold_coin = robot_status.remaining_gold_coin;
-  
+
   robot_status_pub_->publish(robot_status_msg);
 }
 
