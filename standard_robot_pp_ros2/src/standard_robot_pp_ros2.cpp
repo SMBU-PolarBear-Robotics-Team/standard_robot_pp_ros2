@@ -92,6 +92,12 @@ void StandardRobotPpRos2Node::createPublisher()
     this->create_publisher<pb_rm_interfaces::msg::GroundRobotPosition>("/pb_rm/ground_robot_position", 10);
   rfid_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("/pb_rm/rfid_status", 10);
+  robot_status_pub_ =
+    this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("/pb_rm/robot_status", 10);
+  gimbal_cmd_pub_ =
+    this->create_publisher<pb_rm_interfaces::msg::GimbalCmd>("/pb_rm/gimbal_cmd", 10);
+  shoot_cmd_pub_ =
+    this->create_publisher<pb_rm_interfaces::msg::ShootCmd>("/pb_rm/shoot_cmd", 10);
 
   imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
@@ -326,7 +332,7 @@ void StandardRobotPpRos2Node::receiveData()
           publishImuData(imu_data);
         } break;
         case ID_EVENT_DATA: {
-          ReceiveEventDate event_data = fromVector<ReceiveEventDate>(data_buf);
+          ReceiveEventData event_data = fromVector<ReceiveEventData>(data_buf);
           publishEventData(event_data);
         } break;
         case ID_PID_DEBUG: {
@@ -351,6 +357,18 @@ void StandardRobotPpRos2Node::receiveData()
         case ID_RFID_STASTUS: {
           ReceiveRfidStatus rfid_status_data = fromVector<ReceiveRfidStatus>(data_buf);
           publishRfidStatus(rfid_status_data);
+        } break;
+        case ID_ROBOT_STATUS: {
+          ReceiveRobotStatus robot_status_data = fromVector<ReceiveRobotStatus>(data_buf);
+          publishRobotStatus(robot_status_data);
+        } break;
+        case ID_GIMBAL_CMD: {
+          ReceiveGimbalCmd gimbal_cmd_data = fromVector<ReceiveGimbalCmd>(data_buf);
+          publishGimbalCmd(gimbal_cmd_data);
+        } break;
+        case ID_SHOOT_CMD: {
+          ReceiveShootCmd shoot_cmd_data = fromVector<ReceiveShootCmd>(data_buf);
+          publishShootCmd(shoot_cmd_data);
         } break;
         default: {
           RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
@@ -431,7 +449,7 @@ void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
   imu_tf_broadcaster_->sendTransform(t);
 }
 
-void StandardRobotPpRos2Node::publishEventData(ReceiveEventDate & event_data)
+void StandardRobotPpRos2Node::publishEventData(ReceiveEventData & event_data)
 {
   auto event_data_msg = pb_rm_interfaces::msg::EventData();
 
@@ -568,6 +586,71 @@ void StandardRobotPpRos2Node::publishRfidStatus(ReceiveRfidStatus & rfid_status)
   rfid_status_pub_->publish(rfid_status_msg);
 }
 
+void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_status)
+{
+  auto robot_status_msg = pb_rm_interfaces::msg::RobotStatus();
+
+  robot_status_msg.robot_id = robot_status.robot_id;
+  robot_status_msg.robot_level = robot_status.robot_level;
+  robot_status_msg.current_hp = robot_status.current_up;
+  robot_status_msg.maximum_hp = robot_status.maximum_hp;
+  robot_status_msg.shooter_barrel_cooling_value = robot_status.shooter_barrel_cooling_value;
+  robot_status_msg.shooter_barrel_heat_limit = robot_status.shooter_barrel_heat_limit;
+
+  robot_status_msg.shooter_17mm_1_barrel_heat = robot_status.shooter_17mm_1_barrel_heat;
+
+  robot_status.robot_pos_x = robot_status.robot_pos_x;
+  robot_status.robot_pos_y = robot_status.robot_pos_y;
+  robot_status.robot_pos_angle = robot_status.robot_pos_angle;
+
+  robot_status.armor_id = robot_status.armor_id;
+
+  switch (robot_status.hp_deduction_reason)
+  {
+    case 0:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::ARMOR_HIT;
+      break;
+    case 1:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::SYSTEM_OFFLINE;
+      break;
+    case 2:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_SHOOT_SPEED;
+      break;
+    case 3:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_HEAT;
+      break;
+    case 4:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_POWER;
+      break;
+    case 5:
+      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::ARMOR_COLLISION;
+      break;
+  }
+
+  robot_status.projectile_allowance_17mm_1 = robot_status.projectile_allowance_17mm_1;
+  robot_status.remaining_gold_coin = robot_status.remaining_gold_coin;
+  
+  robot_status_pub_->publish(robot_status_msg);
+}
+
+void StandardRobotPpRos2Node::publishGimbalCmd(ReceiveGimbalCmd & gimbal_cmd)
+{
+  auto gimbal_cmd_msg = pb_rm_interfaces::msg::GimbalCmd();
+
+  gimbal_cmd_msg.yaw = gimbal_cmd.yaw;
+  gimbal_cmd_msg.pitch = gimbal_cmd.pitch;
+
+  gimbal_cmd_pub_->publish(gimbal_cmd_msg);
+}
+
+void StandardRobotPpRos2Node::publishShootCmd(ReceiveShootCmd & shoot_cmd)
+{
+  auto shoot_cmd_msg = pb_rm_interfaces::msg::ShootCmd();
+
+  shoot_cmd_msg.projectile_num = shoot_cmd.projectile_num;
+
+  shoot_cmd_pub_->publish(shoot_cmd_msg);
+}
 /********************************************************/
 /* Send data                                            */
 /********************************************************/

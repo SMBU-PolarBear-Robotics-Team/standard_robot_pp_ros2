@@ -18,6 +18,10 @@ const uint8_t ID_GAME_STATUS = 0x06;
 const uint8_t ID_ROBOT_MOTION = 0x07;
 const uint8_t ID_GROUND_ROBOT_POSITION = 0x08;
 const uint8_t ID_RFID_STASTUS = 0x09;
+const uint8_t ID_ROBOT_STATUS = 0x0A;
+const uint8_t ID_GIMBAL_CMD = 0x0B;
+const uint8_t ID_SHOOT_CMD = 0x0C;
+
 
 const uint8_t ID_ROBOT_CMD = 0x01;
 
@@ -40,9 +44,7 @@ struct HeaderFrame
 struct ReceiveDebugData
 {
   HeaderFrame frame_header;  // id = 0x01
-
   uint32_t time_stamp;
-
   struct
   {
     uint8_t name[DEBUG_PACKAGE_NAME_LEN];
@@ -53,30 +55,10 @@ struct ReceiveDebugData
   uint16_t checksum;
 } __attribute__((packed));
 
-// 事件数据包
-struct ReceiveEventDate
-{
-  uint8_t supply_station_front;
-  uint8_t supply_station_internal;
-  uint8_t supply_zone;
-  uint8_t center_gain_zone;
-
-  uint8_t small_energy;
-  uint8_t big_energy;
-
-  uint8_t circular_highland;
-  uint8_t trapezoidal_highland_3;
-  uint8_t trapezoidal_highland_4;
- 
-  uint8_t base_virtual_shield_remaining;
-
-} __attribute__((packed));
-
 // IMU 数据包
 struct ReceiveImuData
 {
   HeaderFrame frame_header;  // id = 0x02
-
   uint32_t time_stamp;
 
   struct
@@ -97,14 +79,34 @@ struct ReceiveImuData
   uint16_t crc;
 } __attribute__((packed));
 
+// 事件数据包
+struct ReceiveEventData
+{
+  HeaderFrame frame_header;  // id = 0x03
+  uint32_t time_stamp;
+
+  uint8_t supply_station_front;
+  uint8_t supply_station_internal;
+  uint8_t supply_zone;
+  uint8_t center_gain_zone;
+
+  uint8_t small_energy;
+  uint8_t big_energy;
+
+  uint8_t circular_highland;
+  uint8_t trapezoidal_highland_3;
+  uint8_t trapezoidal_highland_4;
+ 
+  uint8_t base_virtual_shield_remaining;
+
+  uint16_t crc;
+} __attribute__((packed));
 
 // PID调参数据包
 struct ReceivePidDebugData
 {
   HeaderFrame frame_header;  // id = 0x04
-
   uint32_t time_stamp;
-
   struct
   {
     float fdb;
@@ -142,14 +144,13 @@ struct ReceiveAllRobotHpData
     uint16_t blue_base_hp;
   } __attribute__((packed)) data;
 
-  uint16_t crc;
+    uint16_t crc;
 } __attribute__((packed));
 
 // 比赛信息数据包
 struct ReceiveGameStatusData
 {
   HeaderFrame frame_header;  // id = 0x06
-
   uint32_t time_stamp;
 
   struct
@@ -165,7 +166,6 @@ struct ReceiveGameStatusData
 struct ReceiveRobotMotionData
 {
   HeaderFrame frame_header;  // id = 0x07
-
   uint32_t time_stamp;
 
   struct
@@ -176,15 +176,16 @@ struct ReceiveRobotMotionData
       float vy;
       float wz;
     } __attribute__((packed)) speed_vector;
-
   } __attribute__((packed)) data;
-
   uint16_t crc;
 } __attribute__((packed));
 
 // 地面机器人位置数据包
 struct ReceiveGroundRobotPosition
 {
+  HeaderFrame frame_header;  // id = 0x08
+  uint32_t time_stamp;
+
   float hero_x;
   float hero_y;
   
@@ -199,11 +200,14 @@ struct ReceiveGroundRobotPosition
   
   float standard_5_x;
   float standard_5_y;
-
+  uint16_t crc;
 } __attribute__((packed));
 
 struct ReceiveRfidStatus
 {
+  HeaderFrame frame_header;  // id = 0x09
+  uint32_t time_stamp;
+
   bool base_gain_point;                       // 己方基地增益点
   bool circular_highland_gain_point;          // 己方环形高地增益点
   bool enemy_circular_highland_gain_point;    // 对方环形高地增益点
@@ -224,7 +228,57 @@ struct ReceiveRfidStatus
   bool enemy_big_resource_island;             // 对方大资源岛增益点
   bool friendly_exchange_area;                // 己方兑换区
   bool center_gain_point;                     // 中心增益点 RFID 卡状态（仅 RMUL 适用），1 为已检测到
+  
+  uint16_t crc;
+} __attribute__((packed));
 
+struct ReceiveRobotStatus
+{
+  HeaderFrame frame_header;  // id = 0x0A
+
+  uint32_t time_stamp;
+
+  uint8_t robot_id;
+  uint8_t robot_level;
+  uint16_t current_up;
+  uint16_t maximum_hp;
+  uint16_t shooter_barrel_cooling_value;
+  uint16_t shooter_barrel_heat_limit;
+
+  uint16_t shooter_17mm_1_barrel_heat;
+
+  float robot_pos_x;
+  float robot_pos_y;
+  float robot_pos_angle;
+
+  uint8_t armor_id;
+  uint8_t hp_deduction_reason;
+
+  uint16_t projectile_allowance_17mm_1;
+  uint16_t remaining_gold_coin;   
+
+  uint16_t crc;
+} __attribute__((packed));
+
+struct ReceiveGimbalCmd
+{
+  HeaderFrame frame_header;  // id = 0x0B
+  uint32_t time_stamp;
+
+  float yaw;
+  float pitch;
+
+  uint16_t crc;
+} __attribute__((packed));
+
+struct ReceiveShootCmd
+{
+  HeaderFrame frame_header;  // id = 0x0C
+  uint32_t time_stamp;
+
+  uint8_t projectile_num;
+  
+  uint16_t crc;
 } __attribute__((packed));
 
 /********************************************************/
