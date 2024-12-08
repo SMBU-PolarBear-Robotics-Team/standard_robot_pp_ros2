@@ -12,10 +12,15 @@ const uint8_t SOF_SEND = 0x5A;
 const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;
 const uint8_t ID_ROBOT_INFO = 0x03;
-const uint8_t ID_PID_DEBUG = 0x04;
-const uint8_t ID_ALL_ROBOT_HP = 0x05;
-const uint8_t ID_GAME_STATUS = 0x06;
-const uint8_t ID_ROBOT_MOTION = 0x07;
+const uint8_t ID_EVENT_DATA = 0x04;
+const uint8_t ID_PID_DEBUG = 0x05;
+const uint8_t ID_ALL_ROBOT_HP = 0x06;
+const uint8_t ID_GAME_STATUS = 0x07;
+const uint8_t ID_ROBOT_MOTION = 0x08;
+const uint8_t ID_GROUND_ROBOT_POSITION = 0x09;
+const uint8_t ID_RFID_STASTUS = 0x0A;
+const uint8_t ID_ROBOT_STATUS = 0x0B;
+const uint8_t ID_JOINT_STATE = 0x0C;
 
 const uint8_t ID_ROBOT_CMD = 0x01;
 
@@ -38,9 +43,7 @@ struct HeaderFrame
 struct ReceiveDebugData
 {
   HeaderFrame frame_header;  // id = 0x01
-
   uint32_t time_stamp;
-
   struct
   {
     uint8_t name[DEBUG_PACKAGE_NAME_LEN];
@@ -55,7 +58,6 @@ struct ReceiveDebugData
 struct ReceiveImuData
 {
   HeaderFrame frame_header;  // id = 0x02
-
   uint32_t time_stamp;
 
   struct
@@ -108,17 +110,40 @@ struct ReceiveRobotInfoData
       uint8_t reserve : 3;
     } __attribute__((packed)) state;
 
-    /// @brief 机器人裁判系统信息 7 bytes
-    struct
-    {
-      uint8_t id;
-      uint8_t color;  // 0-red 1-blue 2-unknown
-      bool attacked;
-      uint16_t hp;
-      uint16_t heat;
-    } __attribute__((packed)) referee;
+    // /// @brief 机器人裁判系统信息 7 bytes
+    // struct
+    // {
+    //   uint8_t id;
+    //   uint8_t color;  // 0-red 1-blue 2-unknown
+    //   bool attacked;
+    //   uint16_t hp;
+    //   uint16_t heat;
+    // } __attribute__((packed)) referee;
 
   } __attribute__((packed)) data;
+
+  uint16_t crc;
+} __attribute__((packed));
+
+// 事件数据包
+struct ReceiveEventData
+{
+  HeaderFrame frame_header;  // id = 0x03
+  uint32_t time_stamp;
+
+  uint8_t supply_station_front;
+  uint8_t supply_station_internal;
+  uint8_t supply_zone;
+  uint8_t center_gain_zone;
+
+  uint8_t small_energy;
+  uint8_t big_energy;
+
+  uint8_t circular_highland;
+  uint8_t trapezoidal_highland_3;
+  uint8_t trapezoidal_highland_4;
+
+  uint8_t base_virtual_shield_remaining;
 
   uint16_t crc;
 } __attribute__((packed));
@@ -127,9 +152,7 @@ struct ReceiveRobotInfoData
 struct ReceivePidDebugData
 {
   HeaderFrame frame_header;  // id = 0x04
-
   uint32_t time_stamp;
-
   struct
   {
     float fdb;
@@ -174,7 +197,6 @@ struct ReceiveAllRobotHpData
 struct ReceiveGameStatusData
 {
   HeaderFrame frame_header;  // id = 0x06
-
   uint32_t time_stamp;
 
   struct
@@ -190,7 +212,6 @@ struct ReceiveGameStatusData
 struct ReceiveRobotMotionData
 {
   HeaderFrame frame_header;  // id = 0x07
-
   uint32_t time_stamp;
 
   struct
@@ -201,12 +222,106 @@ struct ReceiveRobotMotionData
       float vy;
       float wz;
     } __attribute__((packed)) speed_vector;
-
   } __attribute__((packed)) data;
+  uint16_t crc;
+} __attribute__((packed));
+
+// 地面机器人位置数据包
+struct ReceiveGroundRobotPosition
+{
+  HeaderFrame frame_header;  // id = 0x08
+  uint32_t time_stamp;
+
+  float hero_x;
+  float hero_y;
+
+  float engineer_x;
+  float engineer_y;
+
+  float standard_3_x;
+  float standard_3_y;
+
+  float standard_4_x;
+  float standard_4_y;
+
+  float standard_5_x;
+  float standard_5_y;
+  uint16_t crc;
+} __attribute__((packed));
+
+// RFID 状态数据包
+struct ReceiveRfidStatus
+{
+  HeaderFrame frame_header;  // id = 0x09
+  uint32_t time_stamp;
+
+  bool base_gain_point;                     // 己方基地增益点
+  bool circular_highland_gain_point;        // 己方环形高地增益点
+  bool enemy_circular_highland_gain_point;  // 对方环形高地增益点
+  bool friendly_r3_b3_gain_point;           // 己方 R3/B3 梯形高地增益点
+  bool enemy_r3_b3_gain_point;              // 对方 R3/B3 梯形高地增益点
+  bool friendly_r4_b4_gain_point;           // 己方 R4/B4 梯形高地增益点
+  bool enemy_r4_b4_gain_point;              // 对方 R4/B4 梯形高地增益点
+  bool energy_mechanism_gain_point;         // 己方能量机关激活点
+  bool friendly_fly_ramp_front_gain_point;  // 己方飞坡增益点（靠近己方一侧飞坡前）
+  bool friendly_fly_ramp_back_gain_point;  // 己方飞坡增益点（靠近己方一侧飞坡后）
+  bool enemy_fly_ramp_front_gain_point;    // 对方飞坡增益点（靠近对方一侧飞坡前）
+  bool enemy_fly_ramp_back_gain_point;     // 对方飞坡增益点（靠近对方一侧飞坡后）
+  bool friendly_outpost_gain_point;        // 己方前哨站增益点
+  bool friendly_healing_point;             // 己方补血点（检测到任一均视为激活）
+  bool friendly_sentry_patrol_area;        // 己方哨兵巡逻区
+  bool enemy_sentry_patrol_area;           // 对方哨兵巡逻区
+  bool friendly_big_resource_island;       // 己方大资源岛增益点
+  bool enemy_big_resource_island;          // 对方大资源岛增益点
+  bool friendly_exchange_area;             // 己方兑换区
+  bool center_gain_point;  // 中心增益点 RFID 卡状态（仅 RMUL 适用），1 为已检测到
 
   uint16_t crc;
 } __attribute__((packed));
 
+// 机器人状态数据包
+struct ReceiveRobotStatus
+{
+  HeaderFrame frame_header;  // id = 0x0A
+
+  uint32_t time_stamp;
+
+  uint8_t robot_id;
+  uint8_t robot_level;
+  uint16_t current_up;
+  uint16_t maximum_hp;
+  uint16_t shooter_barrel_cooling_value;
+  uint16_t shooter_barrel_heat_limit;
+
+  uint16_t shooter_17mm_1_barrel_heat;
+
+  float robot_pos_x;
+  float robot_pos_y;
+  float robot_pos_angle;
+
+  uint8_t armor_id;
+  uint8_t hp_deduction_reason;
+
+  uint16_t projectile_allowance_17mm_1;
+  uint16_t remaining_gold_coin;
+
+  uint16_t crc;
+} __attribute__((packed));
+
+// 云台状态数据包
+struct ReceiveJointState
+{
+  HeaderFrame frame_header;  // id = 0x0B
+  uint32_t time_stamp;
+
+  struct
+  {
+    float pitch;
+    float yaw;
+  } __attribute__((packed)) data;
+
+  uint16_t crc;
+} __attribute__((packed));
 /********************************************************/
 /* Send data                                            */
 /********************************************************/
