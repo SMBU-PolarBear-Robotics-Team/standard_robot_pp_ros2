@@ -23,6 +23,7 @@
 #include <pb_rm_interfaces/msg/game_status.hpp>
 #include <pb_rm_interfaces/msg/ground_robot_position.hpp>
 #include <pb_rm_interfaces/msg/rfid_status.hpp>
+#include <pb_rm_interfaces/msg/robot_state_info.hpp>
 #include <pb_rm_interfaces/msg/robot_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -63,6 +64,7 @@ private:
   std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
 
   // Publish
+  rclcpp::Publisher<pb_rm_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::EventData>::SharedPtr event_data_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GameRobotHP>::SharedPtr all_robot_hp_pub_;
@@ -81,6 +83,7 @@ private:
 
   void publishDebugData(ReceiveDebugData & debug_data);
   void publishImuData(ReceiveImuData & imu_data);
+  void publishRobotInfo(ReceiveRobotInfoData & robot_info);
   void publishEventData(ReceiveEventData & event_data);
   void publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp);
   void publishGameStatus(ReceiveGameStatusData & game_status);

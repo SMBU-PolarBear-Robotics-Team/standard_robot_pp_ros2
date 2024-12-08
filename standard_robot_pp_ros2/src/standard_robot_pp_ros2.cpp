@@ -79,6 +79,8 @@ StandardRobotPpRos2Node::~StandardRobotPpRos2Node()
 void StandardRobotPpRos2Node::createPublisher()
 {
   imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/pb_rm/imu", 10);
+  robot_state_info_pub_ =
+    this->create_publisher<pb_rm_interfaces::msg::RobotStateInfo>("/pb_rm/robot_info", 10);
   event_data_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::EventData>("/pb_rm/event_data", 10);
   all_robot_hp_pub_ =
@@ -325,6 +327,10 @@ void StandardRobotPpRos2Node::receiveData()
           ReceiveImuData imu_data = fromVector<ReceiveImuData>(data_buf);
           publishImuData(imu_data);
         } break;
+        case ID_ROBOT_INFO: {
+          ReceiveRobotInfoData robot_info_data = fromVector<ReceiveRobotInfoData>(data_buf);
+          publishRobotInfo(robot_info_data);
+        } break;
         case ID_EVENT_DATA: {
           ReceiveEventData event_data = fromVector<ReceiveEventData>(data_buf);
           publishEventData(event_data);
@@ -437,6 +443,29 @@ void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
   t.child_frame_id = "imu";
   t.transform.rotation = tf2::toMsg(q);
   imu_tf_broadcaster_->sendTransform(t);
+}
+
+void StandardRobotPpRos2Node::publishRobotInfo(ReceiveRobotInfoData & robot_info)
+{
+  auto robot_state_info_msg = pb_rm_interfaces::msg::RobotStateInfo();
+  robot_state_info_msg.header.stamp.sec = robot_info.time_stamp / 1000;
+  robot_state_info_msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
+  robot_state_info_msg.header.frame_id = "odom";
+
+  robot_state_info_msg.models.chassis = robot_models_.chassis.at(robot_info.data.type.chassis);
+  robot_state_info_msg.models.gimbal = robot_models_.gimbal.at(robot_info.data.type.gimbal);
+  robot_state_info_msg.models.shoot = robot_models_.shoot.at(robot_info.data.type.shoot);
+  robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
+  robot_state_info_msg.models.custom_controller =
+    robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
+
+  // robot_state_info_msg.referee.type = "步兵";
+  // robot_state_info_msg.referee.color = "red";
+  // robot_state_info_msg.referee.attacked = robot_info.data.referee.attacked;
+  // robot_state_info_msg.referee.hp = robot_info.data.referee.hp;
+  // robot_state_info_msg.referee.heat = robot_info.data.referee.heat;
+
+  robot_state_info_pub_->publish(robot_state_info_msg);
 }
 
 void StandardRobotPpRos2Node::publishEventData(ReceiveEventData & event_data)
