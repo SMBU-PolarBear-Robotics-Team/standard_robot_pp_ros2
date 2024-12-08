@@ -11,15 +11,16 @@ const uint8_t SOF_SEND = 0x5A;
 
 const uint8_t ID_DEBUG = 0x01;
 const uint8_t ID_IMU = 0x02;
-const uint8_t ID_EVENT_DATA = 0x03;
-const uint8_t ID_PID_DEBUG = 0x04;
-const uint8_t ID_ALL_ROBOT_HP = 0x05;
-const uint8_t ID_GAME_STATUS = 0x06;
-const uint8_t ID_ROBOT_MOTION = 0x07;
-const uint8_t ID_GROUND_ROBOT_POSITION = 0x08;
-const uint8_t ID_RFID_STASTUS = 0x09;
-const uint8_t ID_ROBOT_STATUS = 0x0A;
-const uint8_t ID_JOINT_STATE = 0x0B;
+const uint8_t ID_ROBOT_INFO = 0x03;
+const uint8_t ID_EVENT_DATA = 0x04;
+const uint8_t ID_PID_DEBUG = 0x05;
+const uint8_t ID_ALL_ROBOT_HP = 0x06;
+const uint8_t ID_GAME_STATUS = 0x07;
+const uint8_t ID_ROBOT_MOTION = 0x08;
+const uint8_t ID_GROUND_ROBOT_POSITION = 0x09;
+const uint8_t ID_RFID_STASTUS = 0x0A;
+const uint8_t ID_ROBOT_STATUS = 0x0B;
+const uint8_t ID_JOINT_STATE = 0x0C;
 
 const uint8_t ID_ROBOT_CMD = 0x01;
 
@@ -72,6 +73,53 @@ struct ReceiveImuData
     // float x_accel;  // m/s^2
     // float y_accel;  // m/s^2
     // float z_accel;  // m/s^2
+  } __attribute__((packed)) data;
+
+  uint16_t crc;
+} __attribute__((packed));
+
+// 机器人信息数据包
+struct ReceiveRobotInfoData
+{
+  HeaderFrame frame_header;  // id = 0x03
+
+  uint32_t time_stamp;
+
+  struct
+  {
+    /// @brief 机器人部位类型 2 bytes
+    struct
+    {
+      uint16_t chassis : 3;
+      uint16_t gimbal : 3;
+      uint16_t shoot : 3;
+      uint16_t arm : 3;
+      uint16_t custom_controller : 3;
+      uint16_t reserve : 1;
+    } __attribute__((packed)) type;
+
+    /// @brief 机器人部位状态 1 byte
+    /// @note 0: 正常，1: 错误
+    struct
+    {
+      uint8_t chassis : 1;
+      uint8_t gimbal : 1;
+      uint8_t shoot : 1;
+      uint8_t arm : 1;
+      uint8_t custom_controller : 1;
+      uint8_t reserve : 3;
+    } __attribute__((packed)) state;
+
+    // /// @brief 机器人裁判系统信息 7 bytes
+    // struct
+    // {
+    //   uint8_t id;
+    //   uint8_t color;  // 0-red 1-blue 2-unknown
+    //   bool attacked;
+    //   uint16_t hp;
+    //   uint16_t heat;
+    // } __attribute__((packed)) referee;
+
   } __attribute__((packed)) data;
 
   uint16_t crc;
