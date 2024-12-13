@@ -39,7 +39,6 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   createPublisher();
   createSubscription();
 
-  // create robot models map
   robot_models_.chassis = {
     {0, "无底盘"}, {1, "麦轮底盘"}, {2, "全向轮底盘"}, {3, "舵轮底盘"}, {4, "平衡底盘"}};
   robot_models_.gimbal = {{0, "无云台"}, {1, "yaw_pitch直连云台"}};
@@ -47,7 +46,6 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   robot_models_.arm = {{0, "无机械臂"}, {1, "mini机械臂"}};
   robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
 
-  // 启动线程
   serial_port_protect_thread_ = std::thread(&StandardRobotPpRos2Node::serialPortProtect, this);
   receive_thread_ = std::thread(&StandardRobotPpRos2Node::receiveData, this);
   send_thread_ = std::thread(&StandardRobotPpRos2Node::sendData, this);
@@ -205,7 +203,7 @@ void StandardRobotPpRos2Node::serialPortProtect()
 
   // 初始化串口
   serial_driver_->init_port(device_name_, *device_config_);
-  //尝试打开串口
+  // 尝试打开串口
   try {
     if (!serial_driver_->port()->is_open()) {
       serial_driver_->port()->open();
@@ -276,11 +274,11 @@ void StandardRobotPpRos2Node::receiveData()
       }
       sof_count = 0;
 
-      //### sof[0] == SOF_RECEIVE 后读取剩余 header_frame内容
-      std::vector<uint8_t> header_frame_buf(3);  // sof在读取完数据后添加
+      // sof[0] == SOF_RECEIVE 后读取剩余 header_frame 内容
+      std::vector<uint8_t> header_frame_buf(3);  // sof 在读取完数据后添加
 
-      serial_driver_->port()->receive(header_frame_buf);          // 读取除sof外剩下的数据
-      header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加sof
+      serial_driver_->port()->receive(header_frame_buf);  // 读取除 sof 外剩下的数据
+      header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加 sof
       HeaderFrame header_frame = fromVector<HeaderFrame>(header_frame_buf);
 
       // HeaderFrame CRC8 check
@@ -291,7 +289,7 @@ void StandardRobotPpRos2Node::receiveData()
         continue;
       }
 
-      //### crc8_ok 校验正确后读取数据段
+      // crc8_ok 校验正确后读取数据段
       // 根据数据段长度读取数据
       std::vector<uint8_t> data_buf(header_frame.len + 2);  // len + crc
       int received_len = serial_driver_->port()->receive(data_buf);
@@ -307,7 +305,7 @@ void StandardRobotPpRos2Node::receiveData()
         remain_len -= received_len;
       }
 
-      // 数据段读取完成后添加header_frame_buf到data_buf，得到完整数据包
+      // 数据段读取完成后添加 header_frame_buf 到 data_buf，得到完整数据包
       data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
       // 整包数据校验
@@ -317,7 +315,7 @@ void StandardRobotPpRos2Node::receiveData()
         continue;
       }
 
-      //### crc16_ok 校验正确后根据header_frame.id解析数据
+      // crc16_ok 校验正确后根据 header_frame.id 解析数据
       switch (header_frame.id) {
         case ID_DEBUG: {
           ReceiveDebugData debug_data = fromVector<ReceiveDebugData>(data_buf);
@@ -403,42 +401,42 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
     }
     debug_pub = debug_pub_map_.at(name);
 
-    std_msgs::msg::Float64 debug_data;
-    debug_data.data = received_debug_data.packages[i].data;
-    debug_pub->publish(debug_data);
+    std_msgs::msg::Float64 msg;
+    msg.data = received_debug_data.packages[i].data;
+    debug_pub->publish(msg);
   }
 }
 
 void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
 {
-  auto imu_msg = sensor_msgs::msg::Imu();
+  sensor_msgs::msg::Imu msg;
   // Convert Euler angles to quaternion
   tf2::Quaternion q;
   q.setRPY(imu_data.data.roll, imu_data.data.pitch, imu_data.data.yaw);
   // Set the header
-  imu_msg.header.stamp.sec = imu_data.time_stamp / 1000;
-  imu_msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
-  imu_msg.header.frame_id = "odom";
+  msg.header.stamp.sec = imu_data.time_stamp / 1000;
+  msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
+  msg.header.frame_id = "odom";
   // Set the orientation
-  imu_msg.orientation.x = q.x();
-  imu_msg.orientation.y = q.y();
-  imu_msg.orientation.z = q.z();
-  imu_msg.orientation.w = q.w();
+  msg.orientation.x = q.x();
+  msg.orientation.y = q.y();
+  msg.orientation.z = q.z();
+  msg.orientation.w = q.w();
   // Set the angular velocity
-  imu_msg.angular_velocity.x = imu_data.data.roll_vel;
-  imu_msg.angular_velocity.y = imu_data.data.pitch_vel;
-  imu_msg.angular_velocity.z = imu_data.data.yaw_vel;
+  msg.angular_velocity.x = imu_data.data.roll_vel;
+  msg.angular_velocity.y = imu_data.data.pitch_vel;
+  msg.angular_velocity.z = imu_data.data.yaw_vel;
   // Set the linear acceleration
-  // imu_msg.linear_acceleration.x = imu_data.data.x_accel;
-  // imu_msg.linear_acceleration.y = imu_data.data.y_accel;
-  // imu_msg.linear_acceleration.z = imu_data.data.z_accel;
+  // msg.linear_acceleration.x = imu_data.data.x_accel;
+  // msg.linear_acceleration.y = imu_data.data.y_accel;
+  // msg.linear_acceleration.z = imu_data.data.z_accel;
   // Publish the message
-  imu_pub_->publish(imu_msg);
+  imu_pub_->publish(msg);
 
   // Publish the transform to visualize the IMU in Foxglove Studio
   geometry_msgs::msg::TransformStamped t;
-  imu_msg.header.stamp.sec = imu_data.time_stamp / 1000;
-  imu_msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
+  msg.header.stamp.sec = imu_data.time_stamp / 1000;
+  msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
   t.header.frame_id = "odom";
   t.child_frame_id = "imu";
   t.transform.rotation = tf2::toMsg(q);
@@ -447,229 +445,179 @@ void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
 
 void StandardRobotPpRos2Node::publishRobotInfo(ReceiveRobotInfoData & robot_info)
 {
-  auto robot_state_info_msg = pb_rm_interfaces::msg::RobotStateInfo();
-  robot_state_info_msg.header.stamp.sec = robot_info.time_stamp / 1000;
-  robot_state_info_msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
-  robot_state_info_msg.header.frame_id = "odom";
+  pb_rm_interfaces::msg::RobotStateInfo msg;
 
-  robot_state_info_msg.models.chassis = robot_models_.chassis.at(robot_info.data.type.chassis);
-  robot_state_info_msg.models.gimbal = robot_models_.gimbal.at(robot_info.data.type.gimbal);
-  robot_state_info_msg.models.shoot = robot_models_.shoot.at(robot_info.data.type.shoot);
-  robot_state_info_msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
-  robot_state_info_msg.models.custom_controller =
+  msg.header.stamp.sec = robot_info.time_stamp / 1000;
+  msg.header.stamp.nanosec = (robot_info.time_stamp % 1000) * 1e6;
+  msg.header.frame_id = "odom";
+
+  msg.models.chassis = robot_models_.chassis.at(robot_info.data.type.chassis);
+  msg.models.gimbal = robot_models_.gimbal.at(robot_info.data.type.gimbal);
+  msg.models.shoot = robot_models_.shoot.at(robot_info.data.type.shoot);
+  msg.models.arm = robot_models_.arm.at(robot_info.data.type.arm);
+  msg.models.custom_controller =
     robot_models_.custom_controller.at(robot_info.data.type.custom_controller);
 
-  // robot_state_info_msg.referee.type = "步兵";
-  // robot_state_info_msg.referee.color = "red";
-  // robot_state_info_msg.referee.attacked = robot_info.data.referee.attacked;
-  // robot_state_info_msg.referee.hp = robot_info.data.referee.hp;
-  // robot_state_info_msg.referee.heat = robot_info.data.referee.heat;
-
-  robot_state_info_pub_->publish(robot_state_info_msg);
+  robot_state_info_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishEventData(ReceiveEventData & event_data)
 {
-  auto event_data_msg = pb_rm_interfaces::msg::EventData();
+  pb_rm_interfaces::msg::EventData msg;
 
-  event_data_msg.supply_station_front = event_data.supply_station_front;
-  event_data_msg.supply_station_internal = event_data.supply_station_internal;
-  event_data_msg.supply_zone = event_data.supply_zone;
-  event_data_msg.center_gain_zone = event_data.center_gain_zone;
+  msg.supply_station_front = event_data.supply_station_front;
+  msg.supply_station_internal = event_data.supply_station_internal;
+  msg.supply_zone = event_data.supply_zone;
+  msg.center_gain_zone = event_data.center_gain_zone;
 
-  event_data_msg.small_energy = event_data.small_energy;
-  event_data_msg.big_energy = event_data.big_energy;
+  msg.small_energy = event_data.small_energy;
+  msg.big_energy = event_data.big_energy;
 
-  event_data_msg.circular_highland = event_data.circular_highland;
-  event_data_msg.trapezoidal_highland_3 = event_data.trapezoidal_highland_3;
-  event_data_msg.trapezoidal_highland_4 = event_data.trapezoidal_highland_4;
+  msg.circular_highland = event_data.circular_highland;
+  msg.trapezoidal_highland_3 = event_data.trapezoidal_highland_3;
+  msg.trapezoidal_highland_4 = event_data.trapezoidal_highland_4;
 
-  event_data_msg.base_virtual_shield_remaining = event_data.base_virtual_shield_remaining;
+  msg.base_virtual_shield_remaining = event_data.base_virtual_shield_remaining;
 
-  event_data_pub_->publish(event_data_msg);
+  event_data_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
 {
-  auto all_robot_hp_msg = pb_rm_interfaces::msg::GameRobotHP();
+  pb_rm_interfaces::msg::GameRobotHP msg;
 
-  all_robot_hp_msg.red_1_robot_hp = all_robot_hp.data.red_1_robot_hp;
-  all_robot_hp_msg.red_2_robot_hp = all_robot_hp.data.red_2_robot_hp;
-  all_robot_hp_msg.red_3_robot_hp = all_robot_hp.data.red_3_robot_hp;
-  all_robot_hp_msg.red_4_robot_hp = all_robot_hp.data.red_4_robot_hp;
-  all_robot_hp_msg.red_5_robot_hp = all_robot_hp.data.red_5_robot_hp;
-  all_robot_hp_msg.red_7_robot_hp = all_robot_hp.data.red_7_robot_hp;
-  all_robot_hp_msg.red_outpost_hp = all_robot_hp.data.red_outpost_hp;
-  all_robot_hp_msg.red_base_hp = all_robot_hp.data.red_base_hp;
+  msg.red_1_robot_hp = all_robot_hp.data.red_1_robot_hp;
+  msg.red_2_robot_hp = all_robot_hp.data.red_2_robot_hp;
+  msg.red_3_robot_hp = all_robot_hp.data.red_3_robot_hp;
+  msg.red_4_robot_hp = all_robot_hp.data.red_4_robot_hp;
+  msg.red_5_robot_hp = all_robot_hp.data.red_5_robot_hp;
+  msg.red_7_robot_hp = all_robot_hp.data.red_7_robot_hp;
+  msg.red_outpost_hp = all_robot_hp.data.red_outpost_hp;
+  msg.red_base_hp = all_robot_hp.data.red_base_hp;
 
-  all_robot_hp_msg.blue_1_robot_hp = all_robot_hp.data.blue_1_robot_hp;
-  all_robot_hp_msg.blue_2_robot_hp = all_robot_hp.data.blue_2_robot_hp;
-  all_robot_hp_msg.blue_3_robot_hp = all_robot_hp.data.blue_3_robot_hp;
-  all_robot_hp_msg.blue_4_robot_hp = all_robot_hp.data.blue_4_robot_hp;
-  all_robot_hp_msg.blue_5_robot_hp = all_robot_hp.data.blue_5_robot_hp;
-  all_robot_hp_msg.blue_7_robot_hp = all_robot_hp.data.blue_7_robot_hp;
-  all_robot_hp_msg.blue_outpost_hp = all_robot_hp.data.blue_outpost_hp;
-  all_robot_hp_msg.blue_base_hp = all_robot_hp.data.blue_base_hp;
+  msg.blue_1_robot_hp = all_robot_hp.data.blue_1_robot_hp;
+  msg.blue_2_robot_hp = all_robot_hp.data.blue_2_robot_hp;
+  msg.blue_3_robot_hp = all_robot_hp.data.blue_3_robot_hp;
+  msg.blue_4_robot_hp = all_robot_hp.data.blue_4_robot_hp;
+  msg.blue_5_robot_hp = all_robot_hp.data.blue_5_robot_hp;
+  msg.blue_7_robot_hp = all_robot_hp.data.blue_7_robot_hp;
+  msg.blue_outpost_hp = all_robot_hp.data.blue_outpost_hp;
+  msg.blue_base_hp = all_robot_hp.data.blue_base_hp;
 
-  all_robot_hp_pub_->publish(all_robot_hp_msg);
+  all_robot_hp_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishGameStatus(ReceiveGameStatusData & game_status)
 {
-  auto game_status_msg = pb_rm_interfaces::msg::GameStatus();
+  pb_rm_interfaces::msg::GameStatus msg;
 
-  switch (game_status.data.game_progress) {
-    case 0:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::NOT_START;
-      break;
-    case 1:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::PREPARATION;
-      break;
-    case 2:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::SELF_CHECKING;
-      break;
-    case 3:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::COUNT_DOWN;
-      break;
-    case 4:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::RUNNING;
-      break;
-    case 5:
-      game_status_msg.game_progress = pb_rm_interfaces::msg::GameStatus::GAME_OVER;
-      break;
-  }
+  msg.game_progress = game_status.data.game_progress;
+  msg.stage_remain_time = game_status.data.stage_remain_time;
 
-  game_status_msg.stage_remain_time = game_status.data.stage_remain_time;
-
-  game_progress_pub_->publish(game_status_msg);
+  game_progress_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
 {
-  auto robot_motion_msg = geometry_msgs::msg::Twist();
+  geometry_msgs::msg::Twist msg;
 
-  robot_motion_msg.linear.x = robot_motion.data.speed_vector.vx;
-  robot_motion_msg.linear.y = robot_motion.data.speed_vector.vy;
-  robot_motion_msg.angular.z = robot_motion.data.speed_vector.wz;
+  msg.linear.x = robot_motion.data.speed_vector.vx;
+  msg.linear.y = robot_motion.data.speed_vector.vy;
+  msg.angular.z = robot_motion.data.speed_vector.wz;
 
-  robot_motion_pub_->publish(robot_motion_msg);
+  robot_motion_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishGroundRobotPosition(
   ReceiveGroundRobotPosition & ground_robot_position)
 {
-  auto ground_robot_position_msg = pb_rm_interfaces::msg::GroundRobotPosition();
+  pb_rm_interfaces::msg::GroundRobotPosition msg;
 
-  ground_robot_position_msg.hero_x = ground_robot_position.hero_x;
-  ground_robot_position_msg.hero_y = ground_robot_position.hero_y;
+  msg.hero_x = ground_robot_position.hero_x;
+  msg.hero_y = ground_robot_position.hero_y;
 
-  ground_robot_position_msg.engineer_x = ground_robot_position.engineer_x;
-  ground_robot_position_msg.engineer_y = ground_robot_position.engineer_y;
+  msg.engineer_x = ground_robot_position.engineer_x;
+  msg.engineer_y = ground_robot_position.engineer_y;
 
-  ground_robot_position_msg.standard_3_x = ground_robot_position.standard_3_x;
-  ground_robot_position_msg.standard_3_y = ground_robot_position.standard_3_y;
+  msg.standard_3_x = ground_robot_position.standard_3_x;
+  msg.standard_3_y = ground_robot_position.standard_3_y;
 
-  ground_robot_position_msg.standard_4_x = ground_robot_position.standard_4_x;
-  ground_robot_position_msg.standard_4_y = ground_robot_position.standard_4_y;
+  msg.standard_4_x = ground_robot_position.standard_4_x;
+  msg.standard_4_y = ground_robot_position.standard_4_y;
 
-  ground_robot_position_msg.standard_5_x = ground_robot_position.standard_5_x;
-  ground_robot_position_msg.standard_5_y = ground_robot_position.standard_5_y;
+  msg.standard_5_x = ground_robot_position.standard_5_x;
+  msg.standard_5_y = ground_robot_position.standard_5_y;
 
-  ground_robot_position_pub_->publish(ground_robot_position_msg);
+  ground_robot_position_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishRfidStatus(ReceiveRfidStatus & rfid_status)
 {
-  auto rfid_status_msg = pb_rm_interfaces::msg::RfidStatus();
+  pb_rm_interfaces::msg::RfidStatus msg;
 
-  rfid_status_msg.base_gain_point = rfid_status.base_gain_point;
-  rfid_status_msg.circular_highland_gain_point = rfid_status.circular_highland_gain_point;
-  rfid_status_msg.enemy_circular_highland_gain_point =
-    rfid_status.enemy_circular_highland_gain_point;
-  rfid_status_msg.friendly_r3_b3_gain_point = rfid_status.friendly_r3_b3_gain_point;
-  rfid_status_msg.enemy_r3_b3_gain_point = rfid_status.enemy_r3_b3_gain_point;
-  rfid_status_msg.friendly_r4_b4_gain_point = rfid_status.friendly_r4_b4_gain_point;
-  rfid_status_msg.enemy_r4_b4_gain_point = rfid_status.enemy_r4_b4_gain_point;
-  rfid_status_msg.energy_mechanism_gain_point = rfid_status.energy_mechanism_gain_point;
-  rfid_status_msg.friendly_fly_ramp_front_gain_point =
-    rfid_status.friendly_fly_ramp_front_gain_point;
-  rfid_status_msg.friendly_fly_ramp_back_gain_point = rfid_status.friendly_fly_ramp_back_gain_point;
-  rfid_status_msg.enemy_fly_ramp_front_gain_point = rfid_status.enemy_fly_ramp_front_gain_point;
-  rfid_status_msg.enemy_fly_ramp_back_gain_point = rfid_status.enemy_fly_ramp_back_gain_point;
-  rfid_status_msg.friendly_outpost_gain_point = rfid_status.friendly_outpost_gain_point;
-  rfid_status_msg.friendly_healing_point = rfid_status.friendly_healing_point;
-  rfid_status_msg.friendly_sentry_patrol_area = rfid_status.friendly_sentry_patrol_area;
-  rfid_status_msg.enemy_sentry_patrol_area = rfid_status.enemy_sentry_patrol_area;
-  rfid_status_msg.friendly_big_resource_island = rfid_status.friendly_big_resource_island;
-  rfid_status_msg.enemy_big_resource_island = rfid_status.enemy_big_resource_island;
-  rfid_status_msg.friendly_exchange_area = rfid_status.friendly_exchange_area;
-  rfid_status_msg.center_gain_point = rfid_status.center_gain_point;
+  msg.base_gain_point = rfid_status.base_gain_point;
+  msg.circular_highland_gain_point = rfid_status.circular_highland_gain_point;
+  msg.enemy_circular_highland_gain_point = rfid_status.enemy_circular_highland_gain_point;
+  msg.friendly_r3_b3_gain_point = rfid_status.friendly_r3_b3_gain_point;
+  msg.enemy_r3_b3_gain_point = rfid_status.enemy_r3_b3_gain_point;
+  msg.friendly_r4_b4_gain_point = rfid_status.friendly_r4_b4_gain_point;
+  msg.enemy_r4_b4_gain_point = rfid_status.enemy_r4_b4_gain_point;
+  msg.energy_mechanism_gain_point = rfid_status.energy_mechanism_gain_point;
+  msg.friendly_fly_ramp_front_gain_point = rfid_status.friendly_fly_ramp_front_gain_point;
+  msg.friendly_fly_ramp_back_gain_point = rfid_status.friendly_fly_ramp_back_gain_point;
+  msg.enemy_fly_ramp_front_gain_point = rfid_status.enemy_fly_ramp_front_gain_point;
+  msg.enemy_fly_ramp_back_gain_point = rfid_status.enemy_fly_ramp_back_gain_point;
+  msg.friendly_outpost_gain_point = rfid_status.friendly_outpost_gain_point;
+  msg.friendly_healing_point = rfid_status.friendly_healing_point;
+  msg.friendly_sentry_patrol_area = rfid_status.friendly_sentry_patrol_area;
+  msg.enemy_sentry_patrol_area = rfid_status.enemy_sentry_patrol_area;
+  msg.friendly_big_resource_island = rfid_status.friendly_big_resource_island;
+  msg.enemy_big_resource_island = rfid_status.enemy_big_resource_island;
+  msg.friendly_exchange_area = rfid_status.friendly_exchange_area;
+  msg.center_gain_point = rfid_status.center_gain_point;
 
-  rfid_status_pub_->publish(rfid_status_msg);
+  rfid_status_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_status)
 {
-  auto robot_status_msg = pb_rm_interfaces::msg::RobotStatus();
+  pb_rm_interfaces::msg::RobotStatus msg;
 
-  robot_status_msg.robot_id = robot_status.robot_id;
-  robot_status_msg.robot_level = robot_status.robot_level;
-  robot_status_msg.current_hp = robot_status.current_up;
-  robot_status_msg.maximum_hp = robot_status.maximum_hp;
-  robot_status_msg.shooter_barrel_cooling_value = robot_status.shooter_barrel_cooling_value;
-  robot_status_msg.shooter_barrel_heat_limit = robot_status.shooter_barrel_heat_limit;
+  msg.robot_id = robot_status.robot_id;
+  msg.robot_level = robot_status.robot_level;
+  msg.current_hp = robot_status.current_up;
+  msg.maximum_hp = robot_status.maximum_hp;
+  msg.shooter_barrel_cooling_value = robot_status.shooter_barrel_cooling_value;
+  msg.shooter_barrel_heat_limit = robot_status.shooter_barrel_heat_limit;
+  msg.shooter_17mm_1_barrel_heat = robot_status.shooter_17mm_1_barrel_heat;
+  msg.robot_pos_x = robot_status.robot_pos_x;
+  msg.robot_pos_y = robot_status.robot_pos_y;
+  msg.robot_pos_angle = robot_status.robot_pos_angle;
+  msg.armor_id = robot_status.armor_id;
+  msg.hp_deduction_reason = robot_status.hp_deduction_reason;
+  msg.projectile_allowance_17mm_1 = robot_status.projectile_allowance_17mm_1;
+  msg.remaining_gold_coin = robot_status.remaining_gold_coin;
 
-  robot_status_msg.shooter_17mm_1_barrel_heat = robot_status.shooter_17mm_1_barrel_heat;
-
-  robot_status.robot_pos_x = robot_status.robot_pos_x;
-  robot_status.robot_pos_y = robot_status.robot_pos_y;
-  robot_status.robot_pos_angle = robot_status.robot_pos_angle;
-
-  robot_status.armor_id = robot_status.armor_id;
-
-  switch (robot_status.hp_deduction_reason) {
-    case 0:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::ARMOR_HIT;
-      break;
-    case 1:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::SYSTEM_OFFLINE;
-      break;
-    case 2:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_SHOOT_SPEED;
-      break;
-    case 3:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_HEAT;
-      break;
-    case 4:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::OVER_POWER;
-      break;
-    case 5:
-      robot_status_msg.hp_deduction_reason = pb_rm_interfaces::msg::RobotStatus::ARMOR_COLLISION;
-      break;
-  }
-
-  robot_status.projectile_allowance_17mm_1 = robot_status.projectile_allowance_17mm_1;
-  robot_status.remaining_gold_coin = robot_status.remaining_gold_coin;
-
-  robot_status_pub_->publish(robot_status_msg);
+  robot_status_pub_->publish(msg);
 }
 
 void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
 {
-  auto joint_state_msg = sensor_msgs::msg::JointState();
+  sensor_msgs::msg::JointState msg;
 
-  joint_state_msg.position.resize(2);
-  joint_state_msg.name.resize(2);
-  joint_state_msg.header.stamp = now();
+  msg.position.resize(2);
+  msg.name.resize(2);
+  msg.header.stamp = now();
 
-  joint_state_msg.name[0] = "gimbal_pitch_joint";
-  joint_state_msg.position[0] = joint_state.data.pitch;
+  msg.name[0] = "gimbal_pitch_joint";
+  msg.position[0] = joint_state.data.pitch;
 
-  joint_state_msg.name[1] = "gimbal_yaw_joint";
-  joint_state_msg.position[1] = joint_state.data.yaw;
+  msg.name[1] = "gimbal_yaw_joint";
+  msg.position[1] = joint_state.data.yaw;
 
-  joint_state_pub_->publish(joint_state_msg);
+  joint_state_pub_->publish(msg);
 }
+
 /********************************************************/
 /* Send data                                            */
 /********************************************************/
@@ -681,7 +629,8 @@ void StandardRobotPpRos2Node::sendData()
   send_robot_cmd_data_.frame_header.sof = SOF_SEND;
   send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
   send_robot_cmd_data_.frame_header.len = sizeof(SendRobotCmdData) - 6;
-  crc8::append_CRC8_check_sum(  //添加帧头crc8校验
+  // 添加帧头crc8校验
+  crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
   while (rclcpp::ok()) {
@@ -693,24 +642,9 @@ void StandardRobotPpRos2Node::sendData()
     }
 
     try {
-      // use for test
-      // rclcpp::Duration run_time = now() - node_start_time_stamp;
-      // std::cout << "time_stamp_ms.seconds: " << run_time.seconds() << std::endl;
-      // std::cout << "time_stamp_ms.nanoseconds: " << run_time.nanoseconds() << std::endl;
-      // double sin_value = std::sin(run_time.seconds());  // 计算sin值
-      // std::cout << "sin_value: " << sin_value << std::endl;
-      // send_robot_cmd_data_.data.speed_vector.vx = sin_value - 1;
-      // send_robot_cmd_data_.data.speed_vector.vy = sin_value;
-      // send_robot_cmd_data_.data.speed_vector.wz = sin_value + 1;
-      // send_robot_cmd_data_.data.chassis.yaw = sin_value * 2 + 2;
-      // send_robot_cmd_data_.data.chassis.pitch = sin_value * 2 + 3;
-      // send_robot_cmd_data_.data.chassis.roll = sin_value * 2 + 4;
-      // send_robot_cmd_data_.data.chassis.leg_lenth = sin_value * 2 + 5;
-      // send_robot_cmd_data_.data.gimbal.yaw = sin_value * 3 + 6;
-      // send_robot_cmd_data_.data.gimbal.pitch = sin_value * 3 + 7;
-
       // 整包数据校验
-      crc16::append_CRC16_check_sum(  //添加数据段crc16校验
+      // 添加数据段crc16校验
+      crc16::append_CRC16_check_sum(
         reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(SendRobotCmdData));
 
       // 发送数据
@@ -722,14 +656,12 @@ void StandardRobotPpRos2Node::sendData()
       usb_is_ok_ = false;
     }
 
-    // thread sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 }
 
 void StandardRobotPpRos2Node::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-  // 更新发送数据
   send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
   send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;
   send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
