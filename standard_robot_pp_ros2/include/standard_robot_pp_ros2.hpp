@@ -70,6 +70,7 @@ private:
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr cmd_gimbal_joint_sub_;
 
   RobotModels robot_models_;
   std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
@@ -99,6 +100,7 @@ private:
   void publishJointState(ReceiveJointState & data);
 
   void CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+  void CmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
 };
 }  // namespace standard_robot_pp_ros2
 
