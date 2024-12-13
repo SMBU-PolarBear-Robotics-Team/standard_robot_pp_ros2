@@ -343,7 +343,7 @@ void StandardRobotPpRos2Node::receiveData()
           ReceiveAllRobotHpData all_robot_hp_data = fromVector<ReceiveAllRobotHpData>(data_buf);
           publishAllRobotHp(all_robot_hp_data);
         } break;
-        case ID_GAME_PROGRESS: {
+        case ID_GAME_STATUS: {
           ReceiveGameStatusData game_status_data = fromVector<ReceiveGameStatusData>(data_buf);
           publishGameStatus(game_status_data);
         } break;
