@@ -30,6 +30,7 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <serial_driver/serial_driver.hpp>
 #include <std_msgs/msg/float64.hpp>
+#include <std_msgs/msg/u_int8.hpp>
 
 #include "packet_typedef.hpp"
 #include "robot_info.hpp"
@@ -71,6 +72,7 @@ private:
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr cmd_gimbal_joint_sub_;
+  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr cmd_shoot_sub_;
 
   RobotModels robot_models_;
   std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
@@ -101,6 +103,7 @@ private:
 
   void CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void CmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
+  void CmdShootCallback(const std_msgs::msg::UInt8::SharedPtr msg);
 };
 }  // namespace standard_robot_pp_ros2
 

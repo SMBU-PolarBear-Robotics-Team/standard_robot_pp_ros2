@@ -15,7 +15,7 @@ const uint8_t ID_ROBOT_INFO = 0x03;
 const uint8_t ID_EVENT_DATA = 0x04;
 const uint8_t ID_PID_DEBUG = 0x05;
 const uint8_t ID_ALL_ROBOT_HP = 0x06;
-const uint8_t ID_GAME_STATUS = 0x07;
+const uint8_t ID_GAME_PROGRESS = 0x07;
 const uint8_t ID_ROBOT_MOTION = 0x08;
 const uint8_t ID_GROUND_ROBOT_POSITION = 0x09;
 const uint8_t ID_RFID_STASTUS = 0x0A;
@@ -42,7 +42,7 @@ struct HeaderFrame
 // 串口调试数据包
 struct ReceiveDebugData
 {
-  HeaderFrame frame_header;  // id = 0x01
+  HeaderFrame frame_header;
   uint32_t time_stamp;
   struct
   {
@@ -57,7 +57,7 @@ struct ReceiveDebugData
 // IMU 数据包
 struct ReceiveImuData
 {
-  HeaderFrame frame_header;  // id = 0x02
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   struct
@@ -81,7 +81,7 @@ struct ReceiveImuData
 // 机器人信息数据包
 struct ReceiveRobotInfoData
 {
-  HeaderFrame frame_header;  // id = 0x03
+  HeaderFrame frame_header;
 
   uint32_t time_stamp;
 
@@ -128,7 +128,7 @@ struct ReceiveRobotInfoData
 // 事件数据包
 struct ReceiveEventData
 {
-  HeaderFrame frame_header;  // id = 0x03
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   uint8_t supply_station_front;
@@ -151,7 +151,7 @@ struct ReceiveEventData
 // PID调参数据包
 struct ReceivePidDebugData
 {
-  HeaderFrame frame_header;  // id = 0x04
+  HeaderFrame frame_header;
   uint32_t time_stamp;
   struct
   {
@@ -166,7 +166,7 @@ struct ReceivePidDebugData
 // 全场机器人hp信息数据包
 struct ReceiveAllRobotHpData
 {
-  HeaderFrame frame_header;  // id = 0x05
+  HeaderFrame frame_header;
 
   uint32_t time_stamp;
 
@@ -196,7 +196,7 @@ struct ReceiveAllRobotHpData
 // 比赛信息数据包
 struct ReceiveGameStatusData
 {
-  HeaderFrame frame_header;  // id = 0x06
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   struct
@@ -211,7 +211,7 @@ struct ReceiveGameStatusData
 // 机器人运动数据包
 struct ReceiveRobotMotionData
 {
-  HeaderFrame frame_header;  // id = 0x07
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   struct
@@ -229,7 +229,7 @@ struct ReceiveRobotMotionData
 // 地面机器人位置数据包
 struct ReceiveGroundRobotPosition
 {
-  HeaderFrame frame_header;  // id = 0x08
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   float hero_x;
@@ -252,7 +252,7 @@ struct ReceiveGroundRobotPosition
 // RFID 状态数据包
 struct ReceiveRfidStatus
 {
-  HeaderFrame frame_header;  // id = 0x09
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   bool base_gain_point;                     // 己方基地增益点
@@ -282,7 +282,7 @@ struct ReceiveRfidStatus
 // 机器人状态数据包
 struct ReceiveRobotStatus
 {
-  HeaderFrame frame_header;  // id = 0x0A
+  HeaderFrame frame_header;
 
   uint32_t time_stamp;
 
@@ -311,7 +311,7 @@ struct ReceiveRobotStatus
 // 云台状态数据包
 struct ReceiveJointState
 {
-  HeaderFrame frame_header;  // id = 0x0B
+  HeaderFrame frame_header;
   uint32_t time_stamp;
 
   struct
