@@ -17,7 +17,6 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include "crc8_crc16.hpp"
-#include "debug_for_pb_rm.hpp"
 #include "packet_typedef.hpp"
 
 #define USB_NOT_OK_SLEEP_TIME 1000   // (ms)
@@ -32,7 +31,6 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
 {
   RCLCPP_INFO(get_logger(), "Start StandardRobotPpRos2Node!");
-  debug_for_pb_rm::PrintGreenString("Start StandardRobotPpRos2Node!");
 
   node_start_time_stamp_ = now();
   getParams();
@@ -197,7 +195,6 @@ void StandardRobotPpRos2Node::getParams()
 void StandardRobotPpRos2Node::serialPortProtect()
 {
   RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
-  debug_for_pb_rm::PrintGreenString("Start serialPortProtect!");
 
   ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
 
@@ -207,7 +204,7 @@ void StandardRobotPpRos2Node::serialPortProtect()
   try {
     if (!serial_driver_->port()->is_open()) {
       serial_driver_->port()->open();
-      debug_for_pb_rm::PrintGreenString("Serial port opened!");
+      RCLCPP_INFO(get_logger(), "Serial port opened!");
       usb_is_ok_ = true;
     }
   } catch (const std::exception & ex) {
@@ -228,7 +225,7 @@ void StandardRobotPpRos2Node::serialPortProtect()
         serial_driver_->port()->open();
 
         if (serial_driver_->port()->is_open()) {
-          std::cout << "\033[32m Serial port opened! \033[0m" << std::endl;
+          RCLCPP_INFO(get_logger(), "Serial port opened!");
           usb_is_ok_ = true;
         }
       } catch (const std::exception & ex) {
@@ -249,17 +246,16 @@ void StandardRobotPpRos2Node::serialPortProtect()
 void StandardRobotPpRos2Node::receiveData()
 {
   RCLCPP_INFO(get_logger(), "Start receiveData!");
-  debug_for_pb_rm::PrintGreenString("Start receiveData!");
 
   std::vector<uint8_t> sof(1);
   std::vector<uint8_t> receive_data;
 
   int sof_count = 0;
+  int retry_count = 0;
 
   while (rclcpp::ok()) {
     if (!usb_is_ok_) {
-      std::cout << "reveive: usb is not ok!" << std::endl;
-      // thread sleep
+      RCLCPP_WARN(get_logger(), "receive: usb is not ok! Retry count: %d", retry_count++);
       std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
       continue;
     }
@@ -269,9 +265,11 @@ void StandardRobotPpRos2Node::receiveData()
 
       if (sof[0] != SOF_RECEIVE) {
         sof_count++;
-        std::cout << "Find sof, cnt=" << sof_count << std::endl;
+        RCLCPP_INFO(get_logger(), "Find sof, cnt=%d", sof_count);
         continue;
       }
+
+      // Reset sof_count when SOF_RECEIVE is found
       sof_count = 0;
 
       // sof[0] == SOF_RECEIVE 后读取剩余 header_frame 内容
@@ -624,7 +622,6 @@ void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
 void StandardRobotPpRos2Node::sendData()
 {
   RCLCPP_INFO(get_logger(), "Start sendData!");
-  debug_for_pb_rm::PrintGreenString("Start sendData!");
 
   send_robot_cmd_data_.frame_header.sof = SOF_SEND;
   send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
@@ -633,10 +630,11 @@ void StandardRobotPpRos2Node::sendData()
   crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
+  int retry_count = 0;
+
   while (rclcpp::ok()) {
     if (!usb_is_ok_) {
-      std::cout << "send: usb is not ok!" << std::endl;
-      // thread sleep
+      RCLCPP_WARN(get_logger(), "send: usb is not ok! Retry count: %d", retry_count++);
       std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
       continue;
     }
