@@ -111,6 +111,10 @@ void StandardRobotPpRos2Node::createSubscription()
   cmd_gimbal_joint_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "cmd_gimbal_joint", 10,
     std::bind(&StandardRobotPpRos2Node::CmdGimbalJointCallback, this, std::placeholders::_1));
+
+  cmd_shoot_sub_ = this->create_subscription<std_msgs::msg::UInt8>(
+    "cmd_shoot", 10,
+    std::bind(&StandardRobotPpRos2Node::CmdShootCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -344,7 +348,7 @@ void StandardRobotPpRos2Node::receiveData()
           ReceiveAllRobotHpData all_robot_hp_data = fromVector<ReceiveAllRobotHpData>(data_buf);
           publishAllRobotHp(all_robot_hp_data);
         } break;
-        case ID_GAME_STATUS: {
+        case ID_GAME_PROGRESS: {
           ReceiveGameStatusData game_status_data = fromVector<ReceiveGameStatusData>(data_buf);
           publishGameStatus(game_status_data);
         } break;
@@ -687,6 +691,12 @@ void StandardRobotPpRos2Node::CmdGimbalJointCallback(
       send_robot_cmd_data_.data.gimbal.yaw = msg->position[i];
     }
   }
+}
+
+void StandardRobotPpRos2Node::CmdShootCallback(const std_msgs::msg::UInt8::SharedPtr msg)
+{
+  send_robot_cmd_data_.data.shoot.fric_on = true;
+  send_robot_cmd_data_.data.shoot.fire = msg->data;
 }
 
 }  // namespace standard_robot_pp_ros2
