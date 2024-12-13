@@ -74,29 +74,30 @@ StandardRobotPpRos2Node::~StandardRobotPpRos2Node()
 
 void StandardRobotPpRos2Node::createPublisher()
 {
-  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/pb_rm/imu", 10);
+  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("serial/imu", 10);
   robot_state_info_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::RobotStateInfo>("/pb_rm/robot_info", 10);
+    this->create_publisher<pb_rm_interfaces::msg::RobotStateInfo>("serial/robot_state_info", 10);
+  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("serial/joint_state", 10);
+  robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("serial/robot_motion", 10);
+
   event_data_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::EventData>("/pb_rm/event_data", 10);
+    this->create_publisher<pb_rm_interfaces::msg::EventData>("referee/event_data", 10);
   all_robot_hp_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::GameRobotHP>("/pb_rm/all_robot_hp", 10);
+    this->create_publisher<pb_rm_interfaces::msg::GameRobotHP>("referee/all_robot_hp", 10);
   game_progress_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::GameStatus>("/pb_rm/game_progress", 10);
-  robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/pb_rm/robot_motion", 10);
+    this->create_publisher<pb_rm_interfaces::msg::GameStatus>("referee/game_progress", 10);
   ground_robot_position_pub_ = this->create_publisher<pb_rm_interfaces::msg::GroundRobotPosition>(
-    "/pb_rm/ground_robot_position", 10);
+    "referee/ground_robot_position", 10);
   rfid_status_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("/pb_rm/rfid_status", 10);
+    this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("referee/rfid_status", 10);
   robot_status_pub_ =
-    this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("/pb_rm/robot_status", 10);
-  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/pb_rm/joint_state", 10);
+    this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("referee/robot_status", 10);
   imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
 {
-  std::string topic_name = "/pb_rm/debug/" + name;
+  std::string topic_name = "serial/debug/" + name;
   auto debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
   debug_pub_map_.insert(std::make_pair(name, debug_pub));
 }
@@ -104,7 +105,7 @@ void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
 void StandardRobotPpRos2Node::createSubscription()
 {
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    "/cmd_vel", 10, std::bind(&StandardRobotPpRos2Node::updateCmdVel, this, std::placeholders::_1));
+    "cmd_vel", 10, std::bind(&StandardRobotPpRos2Node::updateCmdVel, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
