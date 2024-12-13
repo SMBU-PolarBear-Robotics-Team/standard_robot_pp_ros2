@@ -99,7 +99,7 @@ struct ReceiveRobotInfoData
     } __attribute__((packed)) type;
 
     /// @brief 机器人部位状态 1 byte
-    /// @note 0: 正常，1: 错误
+    /// @note 0: 错误，1: 正常
     struct
     {
       uint8_t chassis : 1;
