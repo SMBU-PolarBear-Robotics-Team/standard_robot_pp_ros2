@@ -28,7 +28,6 @@
 #include <pb_rm_interfaces/msg/robot_state_info.hpp>
 #include <pb_rm_interfaces/msg/robot_status.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <serial_driver/serial_driver.hpp>
 
@@ -56,14 +55,13 @@ private:
   std::thread serial_port_protect_thread_;
 
   // Publish - serial
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
   // Publish - referee
   rclcpp::Publisher<pb_rm_interfaces::msg::EventData>::SharedPtr event_data_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GameRobotHP>::SharedPtr all_robot_hp_pub_;
-  rclcpp::Publisher<pb_rm_interfaces::msg::GameStatus>::SharedPtr game_progress_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::GameStatus>::SharedPtr game_status_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GroundRobotPosition>::SharedPtr
     ground_robot_position_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RfidStatus>::SharedPtr rfid_status_pub_;
@@ -79,7 +77,6 @@ private:
     debug_pub_map_;
 
   SendRobotCmdData send_robot_cmd_data_;
-  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
 
   void getParams();
   void createPublisher();
@@ -90,7 +87,6 @@ private:
   void serialPortProtect();
 
   void publishDebugData(ReceiveDebugData & data);
-  void publishImuData(ReceiveImuData & data);
   void publishRobotInfo(ReceiveRobotInfoData & data);
   void publishEventData(ReceiveEventData & data);
   void publishAllRobotHp(ReceiveAllRobotHpData & data);
