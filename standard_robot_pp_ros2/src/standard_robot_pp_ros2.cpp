@@ -107,6 +107,10 @@ void StandardRobotPpRos2Node::createSubscription()
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     "cmd_vel", 10,
     std::bind(&StandardRobotPpRos2Node::CmdVelCallback, this, std::placeholders::_1));
+
+  cmd_gimbal_joint_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+    "cmd_gimbal_joint", 10,
+    std::bind(&StandardRobotPpRos2Node::CmdGimbalJointCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -665,6 +669,24 @@ void StandardRobotPpRos2Node::CmdVelCallback(const geometry_msgs::msg::Twist::Sh
   send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
   send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;
   send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
+}
+
+void StandardRobotPpRos2Node::CmdGimbalJointCallback(
+  const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+  if (msg->name.size() != msg->position.size()) {
+    RCLCPP_ERROR(
+      get_logger(), "JointState message name and position arrays are of different sizes");
+    return;
+  }
+
+  for (size_t i = 0; i < msg->name.size(); ++i) {
+    if (msg->name[i] == "gimbal_pitch_joint") {
+      send_robot_cmd_data_.data.gimbal.pitch = msg->position[i];
+    } else if (msg->name[i] == "gimbal_yaw_joint") {
+      send_robot_cmd_data_.data.gimbal.yaw = msg->position[i];
+    }
+  }
 }
 
 }  // namespace standard_robot_pp_ros2
