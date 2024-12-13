@@ -17,6 +17,8 @@
 
 #include <tf2_ros/transform_broadcaster.h>
 
+#include <example_interfaces/msg/float64.hpp>
+#include <example_interfaces/msg/u_int8.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <pb_rm_interfaces/msg/event_data.hpp>
 #include <pb_rm_interfaces/msg/game_robot_hp.hpp>
@@ -29,8 +31,6 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <serial_driver/serial_driver.hpp>
-#include <std_msgs/msg/float64.hpp>
-#include <std_msgs/msg/u_int8.hpp>
 
 #include "packet_typedef.hpp"
 #include "robot_info.hpp"
@@ -72,10 +72,10 @@ private:
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr cmd_gimbal_joint_sub_;
-  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr cmd_shoot_sub_;
+  rclcpp::Subscription<example_interfaces::msg::UInt8>::SharedPtr cmd_shoot_sub_;
 
   RobotModels robot_models_;
-  std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
+  std::unordered_map<std::string, rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr>
     debug_pub_map_;
 
   SendRobotCmdData send_robot_cmd_data_;
@@ -103,7 +103,7 @@ private:
 
   void CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void CmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
-  void CmdShootCallback(const std_msgs::msg::UInt8::SharedPtr msg);
+  void CmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
 };
 }  // namespace standard_robot_pp_ros2
 

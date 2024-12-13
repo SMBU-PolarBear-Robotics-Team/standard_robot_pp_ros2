@@ -98,7 +98,7 @@ void StandardRobotPpRos2Node::createPublisher()
 void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
 {
   std::string topic_name = "serial/debug/" + name;
-  auto debug_pub = this->create_publisher<std_msgs::msg::Float64>(topic_name, 10);
+  auto debug_pub = this->create_publisher<example_interfaces::msg::Float64>(topic_name, 10);
   debug_pub_map_.insert(std::make_pair(name, debug_pub));
 }
 
@@ -112,7 +112,7 @@ void StandardRobotPpRos2Node::createSubscription()
     "cmd_gimbal_joint", 10,
     std::bind(&StandardRobotPpRos2Node::CmdGimbalJointCallback, this, std::placeholders::_1));
 
-  cmd_shoot_sub_ = this->create_subscription<std_msgs::msg::UInt8>(
+  cmd_shoot_sub_ = this->create_subscription<example_interfaces::msg::UInt8>(
     "cmd_shoot", 10,
     std::bind(&StandardRobotPpRos2Node::CmdShootCallback, this, std::placeholders::_1));
 }
@@ -386,7 +386,7 @@ void StandardRobotPpRos2Node::receiveData()
 
 void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug_data)
 {
-  static rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr debug_pub;
+  static rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr debug_pub;
   for (int i = 0; i < DEBUG_PACKAGE_NUM; i++) {
     // Create a vector to hold the non-zero data
     std::vector<uint8_t> non_zero_data;
@@ -409,7 +409,7 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
     }
     debug_pub = debug_pub_map_.at(name);
 
-    std_msgs::msg::Float64 msg;
+    example_interfaces::msg::Float64 msg;
     msg.data = received_debug_data.packages[i].data;
     debug_pub->publish(msg);
   }
@@ -693,7 +693,7 @@ void StandardRobotPpRos2Node::CmdGimbalJointCallback(
   }
 }
 
-void StandardRobotPpRos2Node::CmdShootCallback(const std_msgs::msg::UInt8::SharedPtr msg)
+void StandardRobotPpRos2Node::CmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg)
 {
   send_robot_cmd_data_.data.shoot.fric_on = true;
   send_robot_cmd_data_.data.shoot.fire = msg->data;
