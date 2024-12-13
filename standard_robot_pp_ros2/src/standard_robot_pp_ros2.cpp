@@ -32,7 +32,6 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
 {
   RCLCPP_INFO(get_logger(), "Start StandardRobotPpRos2Node!");
 
-  node_start_time_stamp_ = now();
   getParams();
   createPublisher();
   createSubscription();
@@ -77,7 +76,8 @@ void StandardRobotPpRos2Node::createPublisher()
   imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("serial/imu", 10);
   robot_state_info_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RobotStateInfo>("serial/robot_state_info", 10);
-  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("serial/joint_state", 10);
+  joint_state_pub_ =
+    this->create_publisher<sensor_msgs::msg::JointState>("serial/gimbal_joint_state", 10);
   robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("serial/robot_motion", 10);
 
   event_data_pub_ =
@@ -105,7 +105,8 @@ void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
 void StandardRobotPpRos2Node::createSubscription()
 {
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    "cmd_vel", 10, std::bind(&StandardRobotPpRos2Node::updateCmdVel, this, std::placeholders::_1));
+    "cmd_vel", 10,
+    std::bind(&StandardRobotPpRos2Node::CmdVelCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -206,18 +207,18 @@ void StandardRobotPpRos2Node::serialPortProtect()
     if (!serial_driver_->port()->is_open()) {
       serial_driver_->port()->open();
       RCLCPP_INFO(get_logger(), "Serial port opened!");
-      usb_is_ok_ = true;
+      is_usb_ok_ = true;
     }
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(get_logger(), "Open serial port failed : %s", ex.what());
-    usb_is_ok_ = false;
+    is_usb_ok_ = false;
   }
 
-  usb_is_ok_ = true;
+  is_usb_ok_ = true;
   std::this_thread::sleep_for(std::chrono::milliseconds(USB_PROTECT_SLEEP_TIME));
 
   while (rclcpp::ok()) {
-    if (!usb_is_ok_) {
+    if (!is_usb_ok_) {
       try {
         if (serial_driver_->port()->is_open()) {
           serial_driver_->port()->close();
@@ -227,10 +228,10 @@ void StandardRobotPpRos2Node::serialPortProtect()
 
         if (serial_driver_->port()->is_open()) {
           RCLCPP_INFO(get_logger(), "Serial port opened!");
-          usb_is_ok_ = true;
+          is_usb_ok_ = true;
         }
       } catch (const std::exception & ex) {
-        usb_is_ok_ = false;
+        is_usb_ok_ = false;
         RCLCPP_ERROR(get_logger(), "Open serial port failed : %s", ex.what());
       }
     };
@@ -255,7 +256,7 @@ void StandardRobotPpRos2Node::receiveData()
   int retry_count = 0;
 
   while (rclcpp::ok()) {
-    if (!usb_is_ok_) {
+    if (!is_usb_ok_) {
       RCLCPP_WARN(get_logger(), "receive: usb is not ok! Retry count: %d", retry_count++);
       std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
       continue;
@@ -370,7 +371,7 @@ void StandardRobotPpRos2Node::receiveData()
       }
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Error receiving data: %s", ex.what());
-      usb_is_ok_ = false;
+      is_usb_ok_ = false;
     }
   }
 }
@@ -634,7 +635,7 @@ void StandardRobotPpRos2Node::sendData()
   int retry_count = 0;
 
   while (rclcpp::ok()) {
-    if (!usb_is_ok_) {
+    if (!is_usb_ok_) {
       RCLCPP_WARN(get_logger(), "send: usb is not ok! Retry count: %d", retry_count++);
       std::this_thread::sleep_for(std::chrono::milliseconds(USB_NOT_OK_SLEEP_TIME));
       continue;
@@ -652,14 +653,14 @@ void StandardRobotPpRos2Node::sendData()
 
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
-      usb_is_ok_ = false;
+      is_usb_ok_ = false;
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 }
 
-void StandardRobotPpRos2Node::updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
+void StandardRobotPpRos2Node::CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
   send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
   send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;

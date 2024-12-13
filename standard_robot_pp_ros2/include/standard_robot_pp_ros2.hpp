@@ -44,71 +44,61 @@ public:
   ~StandardRobotPpRos2Node() override;
 
 private:
-  rclcpp::Time node_start_time_stamp_;
-  RobotModels robot_models_;
-  bool usb_is_ok_;
-
-  void getParams();
-
-  // Cmmand related
-  SendRobotCmdData send_robot_cmd_data_;
-
-  // Debug data related
-  std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
-    debug_pub_map_;
-
-  // Serial port
+  bool is_usb_ok_;
   std::unique_ptr<IoContext> owned_ctx_;
   std::string device_name_;
   std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
   std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
 
-  // Publish
-  rclcpp::Publisher<pb_rm_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
-  rclcpp::Publisher<pb_rm_interfaces::msg::EventData>::SharedPtr event_data_pub_;
+  std::thread receive_thread_;
+  std::thread send_thread_;
+  std::thread serial_port_protect_thread_;
+
+  // Publish - serial
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::RobotStateInfo>::SharedPtr robot_state_info_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
+  // Publish - referee
+  rclcpp::Publisher<pb_rm_interfaces::msg::EventData>::SharedPtr event_data_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GameRobotHP>::SharedPtr all_robot_hp_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GameStatus>::SharedPtr game_progress_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr robot_motion_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::GroundRobotPosition>::SharedPtr
     ground_robot_position_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RfidStatus>::SharedPtr rfid_status_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
-
-  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
-
-  void createPublisher();
-  void createNewDebugPublisher(const std::string & name);
-
-  void publishDebugData(ReceiveDebugData & debug_data);
-  void publishImuData(ReceiveImuData & imu_data);
-  void publishRobotInfo(ReceiveRobotInfoData & robot_info);
-  void publishEventData(ReceiveEventData & event_data);
-  void publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp);
-  void publishGameStatus(ReceiveGameStatusData & game_status);
-  void publishRobotMotion(ReceiveRobotMotionData & robot_motion);
-  void publishGroundRobotPosition(ReceiveGroundRobotPosition & ground_robot_position);
-  void publishRfidStatus(ReceiveRfidStatus & rfid_status);
-  void publishRobotStatus(ReceiveRobotStatus & robot_status);
-  void publishJointState(ReceiveJointState & joint_state);
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+
+  RobotModels robot_models_;
+  std::unordered_map<std::string, rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr>
+    debug_pub_map_;
+
+  SendRobotCmdData send_robot_cmd_data_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
+
+  void getParams();
+  void createPublisher();
   void createSubscription();
-  void updateCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg);
-
-  // receive_thread
-  std::thread receive_thread_;
+  void createNewDebugPublisher(const std::string & name);
   void receiveData();
-
-  // send thread
-  std::thread send_thread_;
   void sendData();
-
-  // Serial port protect thread
-  std::thread serial_port_protect_thread_;
   void serialPortProtect();
+
+  void publishDebugData(ReceiveDebugData & data);
+  void publishImuData(ReceiveImuData & data);
+  void publishRobotInfo(ReceiveRobotInfoData & data);
+  void publishEventData(ReceiveEventData & data);
+  void publishAllRobotHp(ReceiveAllRobotHpData & data);
+  void publishGameStatus(ReceiveGameStatusData & data);
+  void publishRobotMotion(ReceiveRobotMotionData & data);
+  void publishGroundRobotPosition(ReceiveGroundRobotPosition & data);
+  void publishRfidStatus(ReceiveRfidStatus & data);
+  void publishRobotStatus(ReceiveRobotStatus & data);
+  void publishJointState(ReceiveJointState & data);
+
+  void CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 };
 }  // namespace standard_robot_pp_ros2
 
