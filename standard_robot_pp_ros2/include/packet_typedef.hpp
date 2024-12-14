@@ -11,18 +11,17 @@ const uint8_t SOF_SEND = 0x5A;
 
 // Receive
 const uint8_t ID_DEBUG = 0x01;
-const uint8_t ID_PID_DEBUG = 0x02;
+// const uint8_t ID_IMU_DEBUG = 0x02;
 const uint8_t ID_ROBOT_STATE_INFO = 0x03;
-const uint8_t ID_JOINT_STATE = 0x04;
-const uint8_t ID_ROBOT_MOTION = 0x05;
-
-const uint8_t ID_EVENT_DATA = 0x14;
-const uint8_t ID_ALL_ROBOT_HP = 0x15;
-const uint8_t ID_GAME_STATUS = 0x16;
-const uint8_t ID_GROUND_ROBOT_POSITION = 0x17;
-const uint8_t ID_RFID_STATUS = 0x18;
-const uint8_t ID_ROBOT_STATUS = 0x19;
-
+const uint8_t ID_EVENT_DATA = 0x04;
+const uint8_t ID_PID_DEBUG = 0x05;
+const uint8_t ID_ALL_ROBOT_HP = 0x06;
+const uint8_t ID_GAME_STATUS = 0x07;
+const uint8_t ID_ROBOT_MOTION = 0x08;
+const uint8_t ID_GROUND_ROBOT_POSITION = 0x09;
+const uint8_t ID_RFID_STATUS = 0x0A;
+const uint8_t ID_ROBOT_STATUS = 0x0B;
+const uint8_t ID_JOINT_STATE = 0x0C;
 // Send
 const uint8_t ID_ROBOT_CMD = 0x01;
 
