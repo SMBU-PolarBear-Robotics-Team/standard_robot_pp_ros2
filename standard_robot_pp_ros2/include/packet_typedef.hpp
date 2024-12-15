@@ -11,7 +11,7 @@ const uint8_t SOF_SEND = 0x5A;
 
 // Receive
 const uint8_t ID_DEBUG = 0x01;
-// const uint8_t ID_IMU_DEBUG = 0x02;
+const uint8_t ID_IMU = 0x02;
 const uint8_t ID_ROBOT_STATE_INFO = 0x03;
 const uint8_t ID_EVENT_DATA = 0x04;
 const uint8_t ID_PID_DEBUG = 0x05;
@@ -53,6 +53,30 @@ struct ReceiveDebugData
   } __attribute__((packed)) packages[DEBUG_PACKAGE_NUM];
 
   uint16_t checksum;
+} __attribute__((packed));
+
+// IMU 数据包
+struct ReceiveImuData
+{
+  HeaderFrame frame_header;
+  uint32_t time_stamp;
+
+  struct
+  {
+    float yaw;    // rad
+    float pitch;  // rad
+    float roll;   // rad
+
+    float yaw_vel;    // rad/s
+    float pitch_vel;  // rad/s
+    float roll_vel;   // rad/s
+
+    // float x_accel;  // m/s^2
+    // float y_accel;  // m/s^2
+    // float z_accel;  // m/s^2
+  } __attribute__((packed)) data;
+
+  uint16_t crc;
 } __attribute__((packed));
 
 // 机器人信息数据包
