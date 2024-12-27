@@ -1,3 +1,6 @@
+// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
+// Licensed under the MIT License.
+
 #ifndef STANDARD_ROBOT_PP_ROS2__ROBOT_INFO_HPP_
 #define STANDARD_ROBOT_PP_ROS2__ROBOT_INFO_HPP_
 

@@ -1,6 +1,10 @@
+// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
+// Licensed under the MIT License.
+
 #ifndef STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_
 #define STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -271,7 +275,8 @@ struct ReceiveRfidStatus
     bool friendly_big_resource_island;     // 己方大资源岛增益点
     bool enemy_big_resource_island;        // 对方大资源岛增益点
     bool friendly_exchange_area;           // 己方兑换区
-    bool center_gain_point;  // 中心增益点 RFID 卡状态（仅 RMUL 适用），1 为已检测到
+    bool center_gain_point;  // 中心增益点 RFID 卡状态（仅 RMUL 适用），1
+                             // 为已检测到
   } __attribute__((packed)) data;
   uint16_t crc;
 } __attribute__((packed));

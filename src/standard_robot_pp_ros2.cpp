@@ -1,17 +1,6 @@
-/**
-  ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  * @file       StandardRobotPpRos2Node.hpp/cpp
-  * @brief      上下位机通信模块
-  * @history
-  *  Version    Date            Author          Modification
-  *  V1.0.0     Jul-24-2024     Penguin         1. done
-  @verbatim
-  =================================================================================
+// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
+// Licensed under the MIT License.
 
-  =================================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  */
 #include "standard_robot_pp_ros2.hpp"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -79,7 +68,6 @@ void StandardRobotPpRos2Node::createPublisher()
   joint_state_pub_ =
     this->create_publisher<sensor_msgs::msg::JointState>("serial/gimbal_joint_state", 10);
   robot_motion_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("serial/robot_motion", 10);
-
   event_data_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::EventData>("referee/event_data", 10);
   all_robot_hp_pub_ =
@@ -92,7 +80,6 @@ void StandardRobotPpRos2Node::createPublisher()
     this->create_publisher<pb_rm_interfaces::msg::RfidStatus>("referee/rfid_status", 10);
   robot_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("referee/robot_status", 10);
-  imu_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
@@ -107,15 +94,15 @@ void StandardRobotPpRos2Node::createSubscription()
 {
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     "cmd_vel", 10,
-    std::bind(&StandardRobotPpRos2Node::CmdVelCallback, this, std::placeholders::_1));
+    std::bind(&StandardRobotPpRos2Node::cmdVelCallback, this, std::placeholders::_1));
 
   cmd_gimbal_joint_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "cmd_gimbal_joint", 10,
-    std::bind(&StandardRobotPpRos2Node::CmdGimbalJointCallback, this, std::placeholders::_1));
+    std::bind(&StandardRobotPpRos2Node::cmdGimbalJointCallback, this, std::placeholders::_1));
 
   cmd_shoot_sub_ = this->create_subscription<example_interfaces::msg::UInt8>(
     "cmd_shoot", 10,
-    std::bind(&StandardRobotPpRos2Node::CmdShootCallback, this, std::placeholders::_1));
+    std::bind(&StandardRobotPpRos2Node::cmdShootCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -202,12 +189,11 @@ void StandardRobotPpRos2Node::getParams()
 /********************************************************/
 /* Serial port protect                                  */
 /********************************************************/
-
 void StandardRobotPpRos2Node::serialPortProtect()
 {
   RCLCPP_INFO(get_logger(), "Start serialPortProtect!");
 
-  ///@todo: 1.保持串口连接 2.串口断开重连 3.串口异常处理
+  // @TODO: 1.保持串口连接 2.串口断开重连 3.串口异常处理
 
   // 初始化串口
   serial_driver_->init_port(device_name_, *device_config_);
@@ -243,7 +229,7 @@ void StandardRobotPpRos2Node::serialPortProtect()
         is_usb_ok_ = false;
         RCLCPP_ERROR(get_logger(), "Open serial port failed : %s", ex.what());
       }
-    };
+    }
 
     // thread sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(USB_PROTECT_SLEEP_TIME));
@@ -388,12 +374,12 @@ void StandardRobotPpRos2Node::receiveData()
 void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug_data)
 {
   static rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr debug_pub;
-  for (int i = 0; i < DEBUG_PACKAGE_NUM; i++) {
+  for (auto & package : received_debug_data.packages) {
     // Create a vector to hold the non-zero data
     std::vector<uint8_t> non_zero_data;
-    for (size_t j = 0; j < DEBUG_PACKAGE_NAME_LEN; j++) {
-      if (received_debug_data.packages[i].name[j] != 0) {
-        non_zero_data.push_back(received_debug_data.packages[i].name[j]);
+    for (unsigned char name : package.name) {
+      if (name != 0) {
+        non_zero_data.push_back(name);
       } else {
         break;
       }
@@ -405,13 +391,13 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
       continue;
     }
 
-    if (debug_pub_map_.find(name) == debug_pub_map_.end()) {  // The key is not in the map
+    if (debug_pub_map_.find(name) == debug_pub_map_.end()) {
       createNewDebugPublisher(name);
     }
     debug_pub = debug_pub_map_.at(name);
 
     example_interfaces::msg::Float64 msg;
-    msg.data = received_debug_data.packages[i].data;
+    msg.data = package.data;
     debug_pub->publish(msg);
   }
 }
@@ -441,15 +427,6 @@ void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
   // msg.linear_acceleration.z = imu_data.data.z_accel;
   // Publish the message
   imu_pub_->publish(msg);
-
-  // Publish the transform to visualize the IMU in Foxglove Studio
-  geometry_msgs::msg::TransformStamped t;
-  msg.header.stamp.sec = imu_data.time_stamp / 1000;
-  msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
-  t.header.frame_id = "odom";
-  t.child_frame_id = "imu";
-  t.transform.rotation = tf2::toMsg(q);
-  imu_tf_broadcaster_->sendTransform(t);
 }
 
 void StandardRobotPpRos2Node::publishRobotInfo(ReceiveRobotInfoData & robot_info)
@@ -659,7 +636,6 @@ void StandardRobotPpRos2Node::sendData()
       // 发送数据
       std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
       serial_driver_->port()->send(send_data);
-
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
       is_usb_ok_ = false;
@@ -669,14 +645,14 @@ void StandardRobotPpRos2Node::sendData()
   }
 }
 
-void StandardRobotPpRos2Node::CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
+void StandardRobotPpRos2Node::cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
   send_robot_cmd_data_.data.speed_vector.vx = msg->linear.x;
   send_robot_cmd_data_.data.speed_vector.vy = msg->linear.y;
   send_robot_cmd_data_.data.speed_vector.wz = msg->angular.z;
 }
 
-void StandardRobotPpRos2Node::CmdGimbalJointCallback(
+void StandardRobotPpRos2Node::cmdGimbalJointCallback(
   const sensor_msgs::msg::JointState::SharedPtr msg)
 {
   if (msg->name.size() != msg->position.size()) {
@@ -694,7 +670,7 @@ void StandardRobotPpRos2Node::CmdGimbalJointCallback(
   }
 }
 
-void StandardRobotPpRos2Node::CmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg)
+void StandardRobotPpRos2Node::cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg)
 {
   send_robot_cmd_data_.data.shoot.fric_on = true;
   send_robot_cmd_data_.data.shoot.fire = msg->data;
@@ -703,8 +679,4 @@ void StandardRobotPpRos2Node::CmdShootCallback(const example_interfaces::msg::UI
 }  // namespace standard_robot_pp_ros2
 
 #include "rclcpp_components/register_node_macro.hpp"
-
-// Register the component with class_loader.
-// This acts as a sort of entry point, allowing the component to be discoverable when its library
-// is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(standard_robot_pp_ros2::StandardRobotPpRos2Node)

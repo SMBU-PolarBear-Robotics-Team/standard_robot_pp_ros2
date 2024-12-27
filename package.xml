@@ -7,8 +7,6 @@
   <maintainer email="1120220518@smbu.edu.cn">Penguin</maintainer>
   <maintainer email="lihanchen2004@163.com">Lihan Chen</maintainer>
   <license>MIT</license>
-  <url type="website">https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2</url>
-  <url type="bugtracker">https://gitee.com/SMBU-POLARBEAR/standard_robot_pp_ros2/issues</url>
   <author email="1120220518@smbu.edu.cn">Penguin</author>
 
   <!-- buildtool_depend: dependencies of the build process -->
@@ -17,6 +15,7 @@
   <!-- depend: build, export, and execution dependency -->
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>asio_cmake_module</depend>
   <depend>serial_driver</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
@@ -28,6 +27,7 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_clang_format</test_depend>
+  <test_depend>ament_cmake_black</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -1,27 +1,14 @@
-/**
-  ****************************(C) COPYRIGHT 2019 DJI****************************
-  * @file       crc8_crc16.c/h
-  * @brief      crc8 and crc16 calculate function, verify function, append function.
-  *             crc8和crc16计算函数,校验函数,添加函数
-  * @note       
-  * @history
-  *  Version    Date            Author          Modification
-  *  V1.0.0     Nov-11-2019     RM              1. done
-  *
-  @verbatim
-  ==============================================================================
 
-  ==============================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2019 DJI****************************
-  */
+// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
+// Licensed under the MIT License.
+
 #include "crc8_crc16.hpp"
 
 namespace crc8
 {
-//crc8 generator polynomial:G(x)=x8+x5+x4+1
+// crc8 generator polynomial:G(x)=x8+x5+x4+1
 const uint8_t CRC8_INIT = 0xff;
-const uint8_t CRC8_table[256] = {
+const uint8_t CRC8_TABLE[256] = {
   0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83, 0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
   0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e, 0x5f, 0x01, 0xe3, 0xbd, 0x3e, 0x60, 0x82, 0xdc,
   0x23, 0x7d, 0x9f, 0xc1, 0x42, 0x1c, 0xfe, 0xa0, 0xe1, 0xbf, 0x5d, 0x03, 0x80, 0xde, 0x3c, 0x62,
@@ -52,7 +39,7 @@ uint8_t get_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length, uint8_
   uint8_t uc_index;
   while (dw_length--) {
     uc_index = ucCRC8 ^ (*pch_message++);
-    ucCRC8 = CRC8_table[uc_index];
+    ucCRC8 = CRC8_TABLE[uc_index];
   }
   return (ucCRC8);
 }
@@ -65,12 +52,12 @@ uint8_t get_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length, uint8_
   */
 uint32_t verify_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length)
 {
-  uint8_t ucExpected = 0;
-  if ((pch_message == 0) || (dw_length <= 2)) {
+  uint8_t uc_expected = 0;
+  if ((pch_message == nullptr) || (dw_length <= 2)) {
     return 0;
   }
-  ucExpected = get_CRC8_check_sum(pch_message, dw_length - 1, CRC8_INIT);
-  return (ucExpected == pch_message[dw_length - 1]);
+  uc_expected = get_CRC8_check_sum(pch_message, dw_length - 1, CRC8_INIT);
+  return (uc_expected == pch_message[dw_length - 1]);
 }
 
 /**
@@ -81,12 +68,12 @@ uint32_t verify_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length)
   */
 void append_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length)
 {
-  uint8_t ucCRC = 0;
-  if ((pch_message == 0) || (dw_length <= 2)) {
+  uint8_t uc_crc = 0;
+  if ((pch_message == nullptr) || (dw_length <= 2)) {
     return;
   }
-  ucCRC = get_CRC8_check_sum((uint8_t *)pch_message, dw_length - 1, CRC8_INIT);
-  pch_message[dw_length - 1] = ucCRC;
+  uc_crc = get_CRC8_check_sum(reinterpret_cast<uint8_t *>(pch_message), dw_length - 1, CRC8_INIT);
+  pch_message[dw_length - 1] = uc_crc;
 }
 
 }  // namespace crc8
@@ -94,7 +81,7 @@ void append_CRC8_check_sum(uint8_t * pch_message, unsigned int dw_length)
 namespace crc16
 {
 uint16_t CRC16_INIT = 0xffff;
-const uint16_t wCRC_table[256] = {
+const uint16_t W_CRC_TABLE[256] = {
   0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf, 0x8c48, 0x9dc1, 0xaf5a, 0xbed3,
   0xca6c, 0xdbe5, 0xe97e, 0xf8f7, 0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e,
   0x9cc9, 0x8d40, 0xbfdb, 0xae52, 0xdaed, 0xcb64, 0xf9ff, 0xe876, 0x2102, 0x308b, 0x0210, 0x1399,
@@ -127,13 +114,14 @@ const uint16_t wCRC_table[256] = {
   */
 uint16_t get_CRC16_check_sum(uint8_t * pch_message, uint32_t dw_length, uint16_t wCRC)
 {
-  uint8_t chData;
+  uint8_t ch_data;
   if (pch_message == nullptr) {
     return 0xFFFF;
   }
   while (dw_length--) {
-    chData = *pch_message++;
-    (wCRC) = ((uint16_t)(wCRC) >> 8) ^ wCRC_table[((uint16_t)(wCRC) ^ (uint16_t)(chData)) & 0x00ff];
+    ch_data = *pch_message++;
+    (wCRC) =
+      ((uint16_t)(wCRC) >> 8) ^ W_CRC_TABLE[((uint16_t)(wCRC) ^ (uint16_t)(ch_data)) & 0x00ff];
   }
   return wCRC;
 }
@@ -146,14 +134,14 @@ uint16_t get_CRC16_check_sum(uint8_t * pch_message, uint32_t dw_length, uint16_t
   */
 uint32_t verify_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength)
 {
-  uint16_t wExpected = 0;
+  uint16_t w_expected = 0;
   if ((pchMessage == nullptr) || (dwLength <= 2)) {
     return 0;
   }
-  wExpected = get_CRC16_check_sum(pchMessage, dwLength - 2, CRC16_INIT);
+  w_expected = get_CRC16_check_sum(pchMessage, dwLength - 2, CRC16_INIT);
   return (
-    (wExpected & 0xff) == pchMessage[dwLength - 2] &&
-    ((wExpected >> 8) & 0xff) == pchMessage[dwLength - 1]);
+    (w_expected & 0xff) == pchMessage[dwLength - 2] &&
+    ((w_expected >> 8) & 0xff) == pchMessage[dwLength - 1]);
 }
 
 /**
@@ -164,15 +152,14 @@ uint32_t verify_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength)
   */
 void append_CRC16_check_sum(uint8_t * pchMessage, uint32_t dwLength)
 {
-  uint16_t wCRC = 0;
+  uint16_t w_crc = 0;
   if ((pchMessage == nullptr) || (dwLength <= 2)) {
     return;
   }
-  wCRC = get_CRC16_check_sum((uint8_t *)pchMessage, dwLength - 2, CRC16_INIT);
-  pchMessage[dwLength - 2] = (uint8_t)(wCRC & 0x00ff);
-  pchMessage[dwLength - 1] = (uint8_t)((wCRC >> 8) & 0x00ff);
+  w_crc = get_CRC16_check_sum(reinterpret_cast<uint8_t *>(pchMessage), dwLength - 2, CRC16_INIT);
+  pchMessage[dwLength - 2] = (uint8_t)(w_crc & 0x00ff);
+  pchMessage[dwLength - 1] = (uint8_t)((w_crc >> 8) & 0x00ff);
 }
-
 // 以下是对std::vector<uint8_t>的重载
 
 /**
@@ -185,13 +172,13 @@ bool verify_CRC16_check_sum(std::vector<uint8_t> & pchMessage)
   if (pchMessage.size() <= 2) {
     return false;
   }
-  uint16_t wExpected = 0;
-  uint32_t dwLength = pchMessage.size();
-  wExpected = get_CRC16_check_sum(pchMessage.data(), dwLength - 2, CRC16_INIT);
+  uint16_t w_expected = 0;
+  uint32_t dw_length = pchMessage.size();
+  w_expected = get_CRC16_check_sum(pchMessage.data(), dw_length - 2, CRC16_INIT);
 
   return (
-    (wExpected & 0xff) == pchMessage[dwLength - 2] &&
-    ((wExpected >> 8) & 0xff) == pchMessage[dwLength - 1]);
+    (w_expected & 0xff) == pchMessage[dw_length - 2] &&
+    ((w_expected >> 8) & 0xff) == pchMessage[dw_length - 1]);
 }
 
 }  // namespace crc16

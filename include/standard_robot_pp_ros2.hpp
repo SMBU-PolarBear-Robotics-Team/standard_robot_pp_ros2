@@ -1,25 +1,13 @@
-/**
-  ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  * @file       standard_robot_pp_ros2.hpp/cpp
-  * @brief      上下位机通信模块
-  * @history
-  *  Version    Date            Author          Modification
-  *  V1.0.0     Jul-18-2024     Penguin         1. done
-  @verbatim
-  =================================================================================
+// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
+// Licensed under the MIT License.
 
-  =================================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2024 Polarbear*************************
-  */
-#ifndef STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_
-#define STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_
-
-#include <tf2_ros/transform_broadcaster.h>
+#ifndef STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
+#define STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
 
 #include <example_interfaces/msg/float64.hpp>
 #include <example_interfaces/msg/u_int8.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <memory>
 #include <pb_rm_interfaces/msg/event_data.hpp>
 #include <pb_rm_interfaces/msg/game_robot_hp.hpp>
 #include <pb_rm_interfaces/msg/game_status.hpp>
@@ -31,6 +19,8 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <serial_driver/serial_driver.hpp>
+#include <string>
+#include <unordered_map>
 
 #include "packet_typedef.hpp"
 #include "robot_info.hpp"
@@ -78,7 +68,6 @@ private:
     debug_pub_map_;
 
   SendRobotCmdData send_robot_cmd_data_;
-  std::unique_ptr<tf2_ros::TransformBroadcaster> imu_tf_broadcaster_;
 
   void getParams();
   void createPublisher();
@@ -100,10 +89,10 @@ private:
   void publishRobotStatus(ReceiveRobotStatus & data);
   void publishJointState(ReceiveJointState & data);
 
-  void CmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
-  void CmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
-  void CmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
+  void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+  void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
+  void cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
 };
 }  // namespace standard_robot_pp_ros2
 
-#endif  // STANDARD_ROBOT_PP_ROS2__ROS2_STANDARD_ROBOT_HPP_
+#endif  // STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
