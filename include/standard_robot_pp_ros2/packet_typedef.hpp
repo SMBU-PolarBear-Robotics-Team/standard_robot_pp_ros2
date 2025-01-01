@@ -125,7 +125,6 @@ struct ReceiveRobotInfoData
       uint8_t custom_controller : 1;
       uint8_t reserve : 3;
     } __attribute__((packed)) state;
-
   } __attribute__((packed)) data;
 
   uint16_t crc;
@@ -375,7 +374,6 @@ struct SendRobotCmdData
       uint8_t fire;
       uint8_t fric_on;
     } __attribute__((packed)) shoot;
-
   } __attribute__((packed)) data;
 
   uint16_t checksum;
