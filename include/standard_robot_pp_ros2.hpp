@@ -1,29 +1,40 @@
-// Copyright (c) 2024 SMBU-PolarBear-Robotics-Team
-// Licensed under the MIT License.
+// Copyright 2025 SMBU-PolarBear-Robotics-Team
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
 #define STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
 
-#include <example_interfaces/msg/float64.hpp>
-#include <example_interfaces/msg/u_int8.hpp>
-#include <geometry_msgs/msg/twist.hpp>
 #include <memory>
-#include <pb_rm_interfaces/msg/event_data.hpp>
-#include <pb_rm_interfaces/msg/game_robot_hp.hpp>
-#include <pb_rm_interfaces/msg/game_status.hpp>
-#include <pb_rm_interfaces/msg/ground_robot_position.hpp>
-#include <pb_rm_interfaces/msg/rfid_status.hpp>
-#include <pb_rm_interfaces/msg/robot_state_info.hpp>
-#include <pb_rm_interfaces/msg/robot_status.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/joint_state.hpp>
-#include <serial_driver/serial_driver.hpp>
 #include <string>
 #include <unordered_map>
 
+#include "example_interfaces/msg/float64.hpp"
+#include "example_interfaces/msg/u_int8.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 #include "packet_typedef.hpp"
+#include "pb_rm_interfaces/msg/event_data.hpp"
+#include "pb_rm_interfaces/msg/game_robot_hp.hpp"
+#include "pb_rm_interfaces/msg/game_status.hpp"
+#include "pb_rm_interfaces/msg/ground_robot_position.hpp"
+#include "pb_rm_interfaces/msg/rfid_status.hpp"
+#include "pb_rm_interfaces/msg/robot_state_info.hpp"
+#include "pb_rm_interfaces/msg/robot_status.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "robot_info.hpp"
+#include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "serial_driver/serial_driver.hpp"
 
 namespace standard_robot_pp_ros2
 {

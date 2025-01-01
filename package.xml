@@ -6,7 +6,7 @@
   <description>StandardRobot++ Drive for ROS packages.</description>
   <maintainer email="1120220518@smbu.edu.cn">Penguin</maintainer>
   <maintainer email="lihanchen2004@163.com">Lihan Chen</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
   <author email="1120220518@smbu.edu.cn">Penguin</author>
 
   <!-- buildtool_depend: dependencies of the build process -->
