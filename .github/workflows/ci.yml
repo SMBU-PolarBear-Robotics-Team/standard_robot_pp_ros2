@@ -1,4 +1,4 @@
-name: Build
+name: Build and Test
 on:
   push:
     branches: [ main ]
@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     container:
       image: rostooling/setup-ros-docker:ubuntu-jammy-ros-humble-desktop-latest
@@ -20,3 +20,8 @@ jobs:
           package-name: standard_robot_pp_ros2
           target-ros2-distro: humble
           vcs-repo-file-url: "${{ github.workspace }}/.github/dependency.repos"
+          skip-tests: true
+
+      - name: Test standard_robot_pp_ros2
+        run: |
+          /usr/bin/bash .github/workflows/colcon_test.sh standard_robot_pp_ros2
