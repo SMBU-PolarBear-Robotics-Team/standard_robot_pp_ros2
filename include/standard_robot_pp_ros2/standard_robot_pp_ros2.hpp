@@ -22,7 +22,6 @@
 #include "example_interfaces/msg/float64.hpp"
 #include "example_interfaces/msg/u_int8.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "packet_typedef.hpp"
 #include "pb_rm_interfaces/msg/event_data.hpp"
 #include "pb_rm_interfaces/msg/game_robot_hp.hpp"
 #include "pb_rm_interfaces/msg/game_status.hpp"
@@ -31,10 +30,11 @@
 #include "pb_rm_interfaces/msg/robot_state_info.hpp"
 #include "pb_rm_interfaces/msg/robot_status.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_info.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "serial_driver/serial_driver.hpp"
+#include "standard_robot_pp_ros2/packet_typedef.hpp"
+#include "standard_robot_pp_ros2/robot_info.hpp"
 
 namespace standard_robot_pp_ros2
 {
