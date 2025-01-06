@@ -9,6 +9,8 @@
 
 standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARBEAR/StandardRobotpp.git) 下位机控制使用的机器人驱动，提供了机器人的控制接口、数据接口。
 
+本项目获取下位机的 packet 并发布为 topic，并将下位机处理后的动态关节信息数据发布到 `joint_states` 话题，通过 [joint_state_publisher](https://github.com/ros/joint_state_publisher/tree/ros2/joint_state_publisher) 和 [robot_state_publisher](https://github.com/ros/robot_state_publisher/tree/humble) 建立整车 TF 树（包含 static 和 dynamic）。
+
 ## 2. 协议结构
 
 ### 2.1 数据帧构成
@@ -44,10 +46,16 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
     rosdep install -r --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
     ```
 
-- 自定义消息类型：[pb_rm_interfaces](https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces)
+- 机器人关节描述文件：[pb2025_robot_description](https://github.com/SMBU-PolarBear-Robotics-Team/pb2025_robot_description.git)
 
-    ```sh
-    git clone https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces
+    ```bash
+    git clone https://github.com/SMBU-PolarBear-Robotics-Team/pb2025_robot_description.git
+    ```
+
+- 自定义消息类型：[pb_rm_interfaces](https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces.git)
+
+    ```bash
+    git clone https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces.git
     ```
 
 ## 4. 使用方式

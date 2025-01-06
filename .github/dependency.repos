@@ -3,3 +3,8 @@ repositories:
     type: git
     url: https://github.com/SMBU-PolarBear-Robotics-Team/pb_rm_interfaces.git
     version: main
+
+  pb2025_robot_description:
+    type: git
+    url: https://github.com/SMBU-PolarBear-Robotics-Team/pb2025_robot_description.git
+    version: main
