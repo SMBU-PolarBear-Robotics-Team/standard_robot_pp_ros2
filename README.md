@@ -56,7 +56,6 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
     vcs import --input standard_robot_pp_ros2/.github/dependency.repos
     ```
 
-    > [!NOTE]
     > 请查看导入的仓库的 README，并按照其说明安装其依赖项。
 
   - 在 `$YOUR_ROS_WS` 中运行命令以获取打包的依赖项:
@@ -69,7 +68,6 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
 
 1. 配置 udev，用来定向下位机 RoboMaster C 型开发板串口硬件并给予串口权限
 
-    > [!TIP]
     > 本命令在一台主机中只需要运行一次，无需重复运行。
 
     ```bash
