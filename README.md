@@ -11,6 +11,8 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
 
 本项目获取下位机的 packet 并发布为 topic，并将下位机处理后的动态关节信息数据发布到 `joint_states` 话题，通过 [joint_state_publisher](https://github.com/ros/joint_state_publisher/tree/ros2/joint_state_publisher) 和 [robot_state_publisher](https://github.com/ros/robot_state_publisher/tree/humble) 建立整车 TF 树（包含 static 和 dynamic）。
 
+![frames](https://raw.githubusercontent.com/LihanChen2004/picx-images-hosting/master/frames.5xaq4wriyy.webp)
+
 ## 2. 协议结构
 
 ### 2.1 数据帧构成
@@ -53,10 +55,12 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
   - 在 `$YOUR_ROS_WS/src` 中克隆 Gthub 仓库依赖项:
 
     ```bash
+    sudo apt install python3-vcstool
+
     vcs import --input standard_robot_pp_ros2/.github/dependency.repos
     ```
 
-    > 请查看导入的仓库的 README，并按照其说明安装其依赖项。
+    > 请查看 vcs 导入的子仓库的 README，并按照其说明 **递进地安装子仓库的依赖项**。
 
   - 在 `$YOUR_ROS_WS` 中运行命令以获取打包的依赖项:
 
@@ -82,14 +86,10 @@ standard_robot_pp_ros2 是配合 [StandardRobot++](https://gitee.com/SMBU-POLARB
 
 3. 运行上下位机通讯
 
+    Tips: 如需开启 RViz 可视化，请添加 `use_rviz:=True` 参数。
+
     ```bash
     ros2 launch standard_robot_pp_ros2 standard_robot_pp_ros2.launch.py
-    ```
-
-4. 运行 RViz 可视化（可选）
-
-    ```bash
-    ros2 launch standard_robot_pp_ros2 rviz_launch.py
     ```
 
 ## 5. 致谢

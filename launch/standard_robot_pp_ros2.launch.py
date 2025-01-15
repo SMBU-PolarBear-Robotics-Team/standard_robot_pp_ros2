@@ -19,14 +19,14 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
+    IncludeLaunchDescription,
     SetEnvironmentVariable,
 )
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
-from sdformat_tools.urdf_generator import UrdfGenerator
-from xmacro.xmacro4sdf import XMLMacro4sdf
 
 
 def generate_launch_description():
@@ -41,6 +41,9 @@ def generate_launch_description():
     # Create the launch configuration variables
     namespace = LaunchConfiguration("namespace")
     params_file = LaunchConfiguration("params_file")
+    robot_name = LaunchConfiguration("robot_name")
+    source_list = LaunchConfiguration("source_list")
+    use_rviz = LaunchConfiguration("use_rviz")
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
 
@@ -62,26 +65,6 @@ def generate_launch_description():
         ),
         allow_substs=True,
     )
-
-    xmacro_description = os.path.join(
-        pkg_pb2025_robot_description_dir,
-        "resource",
-        "xmacro",
-        "pb2025_sentry_robot.sdf.xmacro",
-    )
-
-    xmacro = XMLMacro4sdf()
-    xmacro.set_xml_file(xmacro_description)
-
-    # Generate SDF from xmacro
-    xmacro.generate()
-    robot_xml = xmacro.to_string()
-
-    # Generate URDF from SDF
-    urdf_generator = UrdfGenerator()
-    urdf_generator.parse_from_sdf_string(robot_xml)
-    robot_urdf_xml = urdf_generator.to_string()
-
     stdout_linebuf_envvar = SetEnvironmentVariable(
         "RCUTILS_LOGGING_BUFFERED_STREAM", "1"
     )
@@ -102,6 +85,22 @@ def generate_launch_description():
             "standard_robot_pp_ros2.yaml",
         ),
         description="Full path to the ROS2 parameters file to use for all launched nodes",
+    )
+
+    declare_robot_name_cmd = DeclareLaunchArgument(
+        "robot_name",
+        default_value="pb2025_sentry_robot",
+        description="The file name of the robot xmacro to be used",
+    )
+
+    declare_source_list_cmd = DeclareLaunchArgument(
+        "source_list",
+        default_value="['serial/gimbal_joint_state']",
+        description='Array of topic names for subscriptions to sensor_msgs/msg/JointStates. Defaults to an ["serial/gimbal_joint_state"]',
+    )
+
+    declare_use_rviz_cmd = DeclareLaunchArgument(
+        "use_rviz", default_value="False", description="Whether to start RViz"
     )
 
     declare_use_respawn_cmd = DeclareLaunchArgument(
@@ -129,34 +128,22 @@ def generate_launch_description():
                 arguments=["--ros-args", "--log-level", log_level],
                 remappings=remappings,
             ),
-            Node(
-                package="joint_state_publisher",
-                executable="joint_state_publisher",
-                name="joint_state_publisher",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[
-                    {"rate": 200.0, "source_list": ["serial/gimbal_joint_state"]}
-                ],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
-            Node(
-                package="robot_state_publisher",
-                executable="robot_state_publisher",
-                name="robot_state_publisher",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[
-                    {
-                        "publish_frequency": 200.0,
-                        "robot_description": robot_urdf_xml,
-                    }
-                ],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(
+                        pkg_pb2025_robot_description_dir,
+                        "launch",
+                        "robot_description_launch.py",
+                    )
+                ),
+                launch_arguments={
+                    "use_sim_time": "False",
+                    "robot_name": robot_name,
+                    "source_list": source_list,
+                    "use_rviz": use_rviz,
+                    "use_respawn": use_respawn,
+                    "log_level": log_level,
+                }.items(),
             ),
         ]
     )
@@ -170,6 +157,9 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_params_file_cmd)
+    ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_source_list_cmd)
+    ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
 
