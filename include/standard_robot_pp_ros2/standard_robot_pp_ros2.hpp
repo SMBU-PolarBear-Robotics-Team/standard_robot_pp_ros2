@@ -22,6 +22,7 @@
 #include "example_interfaces/msg/float64.hpp"
 #include "example_interfaces/msg/u_int8.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "pb_rm_interfaces/msg/buff.hpp"
 #include "pb_rm_interfaces/msg/event_data.hpp"
 #include "pb_rm_interfaces/msg/game_robot_hp.hpp"
 #include "pb_rm_interfaces/msg/game_status.hpp"
@@ -70,6 +71,7 @@ private:
   rclcpp::Publisher<pb_rm_interfaces::msg::RfidStatus>::SharedPtr rfid_status_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::Buff>::SharedPtr buff_pub_;
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
@@ -101,6 +103,7 @@ private:
   void publishRfidStatus(ReceiveRfidStatus & data);
   void publishRobotStatus(ReceiveRobotStatus & data);
   void publishJointState(ReceiveJointState & data);
+  void publishBuff(ReceiveBuff & data);
 
   void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
