@@ -316,7 +316,7 @@ struct ReceiveRobotStatus
     uint8_t armor_id;
     uint8_t hp_deduction_reason;
 
-    uint16_t projectile_allowance_17mm_1;
+    uint16_t projectile_allowance_17mm;
     uint16_t remaining_gold_coin;
   } __attribute__((packed)) data;
   uint16_t crc;

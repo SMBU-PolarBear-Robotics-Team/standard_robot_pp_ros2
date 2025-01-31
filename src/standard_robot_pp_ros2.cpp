@@ -605,7 +605,7 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
     tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), robot_status.data.robot_pos_angle));
   msg.armor_id = robot_status.data.armor_id;
   msg.hp_deduction_reason = robot_status.data.hp_deduction_reason;
-  msg.projectile_allowance_17mm_1 = robot_status.data.projectile_allowance_17mm_1;
+  msg.projectile_allowance_17mm = robot_status.data.projectile_allowance_17mm;
   msg.remaining_gold_coin = robot_status.data.remaining_gold_coin;
 
   robot_status_pub_->publish(msg);
