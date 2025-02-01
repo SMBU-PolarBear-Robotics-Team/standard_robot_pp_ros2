@@ -603,7 +603,13 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
   msg.projectile_allowance_17mm = robot_status.data.projectile_allowance_17mm;
   msg.remaining_gold_coin = robot_status.data.remaining_gold_coin;
 
+  if (last_hp_ - msg.current_hp > 0) {
+    msg.is_hp_deduced = true;
+  }
+
   robot_status_pub_->publish(msg);
+
+  last_hp_ = robot_status.data.current_up;
 }
 
 void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
