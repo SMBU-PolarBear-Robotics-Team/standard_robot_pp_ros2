@@ -194,6 +194,8 @@ void StandardRobotPpRos2Node::getParams()
 
   device_config_ =
     std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
+
+  offset_timestamp_ = declare_parameter("offset_timestamp", 0.0);
 }
 
 /********************************************************/
@@ -603,7 +605,7 @@ void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
 
   msg.position.resize(2);
   msg.name.resize(2);
-  msg.header.stamp = now();
+  msg.header.stamp = now() + rclcpp::Duration::from_seconds(offset_timestamp_);
 
   msg.name[0] = "gimbal_pitch_joint";
   msg.position[0] = joint_state.data.pitch;
