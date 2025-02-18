@@ -197,6 +197,7 @@ void StandardRobotPpRos2Node::getParams()
     std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
 
   offset_timestamp_ = declare_parameter("offset_timestamp", 0.0);
+  debug_ = declare_parameter("debug", false);
 }
 
 /********************************************************/
@@ -408,14 +409,16 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
       continue;
     }
 
-    if (debug_pub_map_.find(name) == debug_pub_map_.end()) {
-      createNewDebugPublisher(name);
-    }
-    debug_pub = debug_pub_map_.at(name);
+    if (debug_) {
+      if (debug_pub_map_.find(name) == debug_pub_map_.end()) {
+        createNewDebugPublisher(name);
+      }
+      debug_pub = debug_pub_map_.at(name);
 
-    example_interfaces::msg::Float64 msg;
-    msg.data = package.data;
-    debug_pub->publish(msg);
+      example_interfaces::msg::Float64 msg;
+      msg.data = package.data;
+      debug_pub->publish(msg);
+    }
   }
 }
 

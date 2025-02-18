@@ -48,6 +48,7 @@ public:
 
 private:
   bool is_usb_ok_;
+  bool debug_;
   std::unique_ptr<IoContext> owned_ctx_;
   std::string device_name_;
   std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
