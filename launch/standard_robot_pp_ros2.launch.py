@@ -117,17 +117,6 @@ def generate_launch_description():
     bringup_cmd_group = GroupAction(
         [
             PushRosNamespace(namespace),
-            Node(
-                package="standard_robot_pp_ros2",
-                executable="standard_robot_pp_ros2_node",
-                name="standard_robot_pp_ros2",
-                output="screen",
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
-            ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(
@@ -144,6 +133,27 @@ def generate_launch_description():
                     "use_respawn": use_respawn,
                     "log_level": log_level,
                 }.items(),
+            ),
+            Node(
+                package="standard_robot_pp_ros2",
+                executable="standard_robot_pp_ros2_node",
+                name="standard_robot_pp_ros2",
+                output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params],
+                arguments=["--ros-args", "--log-level", log_level],
+                remappings=remappings,
+            ),
+            Node(
+                package="standard_robot_pp_ros2",
+                executable="gimbal_manager_node",
+                name="gimbal_manager",
+                output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                arguments=["--ros-args", "--log-level", log_level],
+                remappings=remappings,
             ),
         ]
     )
