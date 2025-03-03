@@ -24,7 +24,7 @@ from launch.actions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node, PushRosNamespace
+from launch_ros.actions import Node, PushRosNamespace, SetRemap
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
 
@@ -43,17 +43,10 @@ def generate_launch_description():
     params_file = LaunchConfiguration("params_file")
     robot_name = LaunchConfiguration("robot_name")
     source_list = LaunchConfiguration("source_list")
+    offset_timestamp = LaunchConfiguration("offset_timestamp")
     use_rviz = LaunchConfiguration("use_rviz")
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
-
-    # Map fully qualified names to relative ones so the node's namespace can be prepended.
-    # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
-    # https://github.com/ros/geometry2/issues/32
-    # https://github.com/ros/robot_state_publisher/pull/30
-    # TODO(orduno) Substitute with `PushNodeRemapping`
-    #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [("/tf", "tf"), ("/tf_static", "tf_static")]
 
     # Create our own temporary YAML files that include substitutions
     configured_params = ParameterFile(
@@ -99,6 +92,12 @@ def generate_launch_description():
         description='Array of topic names for subscriptions to sensor_msgs/msg/JointStates. Defaults to an ["serial/gimbal_joint_state"]',
     )
 
+    declare_offset_timestamp_cmd = DeclareLaunchArgument(
+        "offset_timestamp",
+        default_value="0.0",
+        description="Offset timestamp for joint state publisher",
+    )
+
     declare_use_rviz_cmd = DeclareLaunchArgument(
         "use_rviz", default_value="False", description="Whether to start RViz"
     )
@@ -117,6 +116,8 @@ def generate_launch_description():
     bringup_cmd_group = GroupAction(
         [
             PushRosNamespace(namespace),
+            SetRemap("/tf", "tf"),
+            SetRemap("/tf_static", "tf_static"),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(
@@ -129,6 +130,7 @@ def generate_launch_description():
                     "use_sim_time": "False",
                     "robot_name": robot_name,
                     "source_list": source_list,
+                    "offset_timestamp": offset_timestamp,
                     "use_rviz": use_rviz,
                     "use_respawn": use_respawn,
                     "log_level": log_level,
@@ -143,7 +145,6 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
             ),
             Node(
                 package="standard_robot_pp_ros2",
@@ -153,7 +154,6 @@ def generate_launch_description():
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 arguments=["--ros-args", "--log-level", log_level],
-                remappings=remappings,
             ),
         ]
     )
@@ -169,6 +169,7 @@ def generate_launch_description():
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_source_list_cmd)
+    ld.add_action(declare_offset_timestamp_cmd)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
