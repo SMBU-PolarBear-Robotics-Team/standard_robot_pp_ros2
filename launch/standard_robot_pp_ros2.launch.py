@@ -42,8 +42,6 @@ def generate_launch_description():
     namespace = LaunchConfiguration("namespace")
     params_file = LaunchConfiguration("params_file")
     robot_name = LaunchConfiguration("robot_name")
-    source_list = LaunchConfiguration("source_list")
-    offset_timestamp = LaunchConfiguration("offset_timestamp")
     use_rviz = LaunchConfiguration("use_rviz")
     use_respawn = LaunchConfiguration("use_respawn")
     log_level = LaunchConfiguration("log_level")
@@ -58,6 +56,7 @@ def generate_launch_description():
         ),
         allow_substs=True,
     )
+
     stdout_linebuf_envvar = SetEnvironmentVariable(
         "RCUTILS_LOGGING_BUFFERED_STREAM", "1"
     )
@@ -84,18 +83,6 @@ def generate_launch_description():
         "robot_name",
         default_value="pb2025_sentry_robot",
         description="The file name of the robot xmacro to be used",
-    )
-
-    declare_source_list_cmd = DeclareLaunchArgument(
-        "source_list",
-        default_value="['serial/gimbal_joint_state']",
-        description='Array of topic names for subscriptions to sensor_msgs/msg/JointStates. Defaults to an ["serial/gimbal_joint_state"]',
-    )
-
-    declare_offset_timestamp_cmd = DeclareLaunchArgument(
-        "offset_timestamp",
-        default_value="0.0",
-        description="Offset timestamp for joint state publisher",
     )
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
@@ -127,10 +114,8 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "use_sim_time": "False",
+                    "params_file": params_file,
                     "robot_name": robot_name,
-                    "source_list": source_list,
-                    "offset_timestamp": offset_timestamp,
                     "use_rviz": use_rviz,
                     "use_respawn": use_respawn,
                     "log_level": log_level,
@@ -168,8 +153,6 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_source_list_cmd)
-    ld.add_action(declare_offset_timestamp_cmd)
     ld.add_action(declare_use_rviz_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
