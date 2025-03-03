@@ -6,4 +6,3 @@ standard_robot_pp_ros2:
     parity: none
     stop_bits: "1"
     debug: false
-    offset_timestamp: 0.008

@@ -53,7 +53,6 @@ private:
   std::string device_name_;
   std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
   std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
-  double offset_timestamp_;
 
   std::thread receive_thread_;
   std::thread send_thread_;
