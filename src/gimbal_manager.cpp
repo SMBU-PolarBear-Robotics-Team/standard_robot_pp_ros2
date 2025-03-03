@@ -46,7 +46,9 @@ void GimbalManagerNode::gimbalCmdCallback(const pb_rm_interfaces::msg::GimbalCmd
 {
   static auto last_msg = std::make_shared<pb_rm_interfaces::msg::GimbalCmd>();
 
-  if (*msg == *last_msg) {
+  if (
+    msg->pitch_type == last_msg->pitch_type && msg->yaw_type == last_msg->yaw_type &&
+    msg->position == last_msg->position && msg->velocity == last_msg->velocity) {
     return;
   }
 
