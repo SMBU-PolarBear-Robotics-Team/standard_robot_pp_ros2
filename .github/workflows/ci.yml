@@ -19,7 +19,7 @@ jobs:
         with:
           package-name: standard_robot_pp_ros2
           target-ros2-distro: humble
-          vcs-repo-file-url: "${{ github.workspace }}/.github/dependency.repos"
+          vcs-repo-file-url: "${{ github.workspace }}/dependencies.repos"
           skip-tests: true
 
       - name: Test standard_robot_pp_ros2
