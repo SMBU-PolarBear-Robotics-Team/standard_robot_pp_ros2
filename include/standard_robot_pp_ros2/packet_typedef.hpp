@@ -252,8 +252,8 @@ struct ReceiveGroundRobotPosition
     float standard_4_x;
     float standard_4_y;
 
-    float standard_5_x;
-    float standard_5_y;
+    float reserved1;
+    float reserved2;
   } __attribute__((packed)) data;
   uint16_t crc;
 } __attribute__((packed));
@@ -397,6 +397,11 @@ struct SendRobotCmdData
       uint8_t fire;
       uint8_t fric_on;
     } __attribute__((packed)) shoot;
+
+    struct
+    {
+      bool tracking;
+    } __attribute__((packed)) tracking;
   } __attribute__((packed)) data;
 
   uint16_t checksum;

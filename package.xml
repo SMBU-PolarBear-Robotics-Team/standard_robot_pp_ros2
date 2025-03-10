@@ -23,6 +23,7 @@
   <depend>sensor_msgs</depend>
   <depend>example_interfaces</depend>
   <depend>pb_rm_interfaces</depend>
+  <depend>auto_aim_interfaces</depend>
 
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>nav2_common</exec_depend>
