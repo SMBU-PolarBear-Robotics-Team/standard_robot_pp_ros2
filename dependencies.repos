@@ -11,3 +11,8 @@ repositories:
     type: git
     url: https://github.com/SMBU-PolarBear-Robotics-Team/pb2025_robot_description.git
     version: main
+
+  auto_aim_interfaces:
+    type: git
+    url: https://github.com/SMBU-PolarBear-Robotics-Team/auto_aim_interfaces.git
+    version: main

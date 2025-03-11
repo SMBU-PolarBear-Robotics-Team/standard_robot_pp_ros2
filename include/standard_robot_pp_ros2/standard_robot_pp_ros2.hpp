@@ -15,7 +15,6 @@
 #ifndef STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
 #define STANDARD_ROBOT_PP_ROS2__STANDARD_ROBOT_PP_ROS2_HPP_
 
-#include <auto_aim_interfaces/msg/detail/target__struct.hpp>
 #include <memory>
 #include <string>
 #include <unordered_map>
