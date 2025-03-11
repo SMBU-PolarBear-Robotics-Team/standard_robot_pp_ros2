@@ -115,8 +115,8 @@ void StandardRobotPpRos2Node::createSubscription()
     "cmd_shoot", 10,
     std::bind(&StandardRobotPpRos2Node::cmdShootCallback, this, std::placeholders::_1));
   cmd_tracking_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
-    "tracker/target",10,std::bind(&StandardRobotPpRos2Node::cmdTrakcingCallback,this,std::placeholders::_1));
-
+    "tracker/target", 10,
+    std::bind(&StandardRobotPpRos2Node::cmdTrakcingCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -714,7 +714,8 @@ void StandardRobotPpRos2Node::cmdGimbalJointCallback(
   }
 }
 
-void StandardRobotPpRos2Node::cmdTrakcingCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg)
+void StandardRobotPpRos2Node::cmdTrakcingCallback(
+  const auto_aim_interfaces::msg::Target::SharedPtr msg)
 {
   send_robot_cmd_data_.data.tracking.tracking = msg->tracking;
 }

@@ -19,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "auto_aim_interfaces/msg/target.hpp"
 #include "example_interfaces/msg/float64.hpp"
 #include "example_interfaces/msg/u_int8.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -36,7 +37,6 @@
 #include "serial_driver/serial_driver.hpp"
 #include "standard_robot_pp_ros2/packet_typedef.hpp"
 #include "standard_robot_pp_ros2/robot_info.hpp"
-#include "auto_aim_interfaces/msg/target.hpp"
 
 namespace standard_robot_pp_ros2
 {
