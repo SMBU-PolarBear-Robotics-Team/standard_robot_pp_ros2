@@ -42,6 +42,8 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   robot_models_.arm = {{0, "无机械臂"}, {1, "mini机械臂"}};
   robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
 
+  joint_state_ = std::make_unique<sensor_msgs::msg::JointState>();
+
   serial_port_protect_thread_ = std::thread(&StandardRobotPpRos2Node::serialPortProtect, this);
   receive_thread_ = std::thread(&StandardRobotPpRos2Node::receiveData, this);
   send_thread_ = std::thread(&StandardRobotPpRos2Node::sendData, this);
@@ -116,7 +118,7 @@ void StandardRobotPpRos2Node::createSubscription()
     std::bind(&StandardRobotPpRos2Node::cmdShootCallback, this, std::placeholders::_1));
   cmd_tracking_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
     "tracker/target", 10,
-    std::bind(&StandardRobotPpRos2Node::cmdTrakcingCallback, this, std::placeholders::_1));
+    std::bind(&StandardRobotPpRos2Node::visionTargetCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -427,28 +429,20 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
 void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
 {
   sensor_msgs::msg::Imu msg;
+  msg.header.stamp = joint_state_->header.stamp = now();
+  msg.header.frame_id = "gimbal_pitch_odom";
+
   // Convert Euler angles to quaternion
   tf2::Quaternion q;
   q.setRPY(imu_data.data.roll, imu_data.data.pitch, imu_data.data.yaw);
-  // Set the header
-  msg.header.stamp.sec = imu_data.time_stamp / 1000;
-  msg.header.stamp.nanosec = (imu_data.time_stamp % 1000) * 1e6;
-  msg.header.frame_id = "odom";
-  // Set the orientation
-  msg.orientation.x = q.x();
-  msg.orientation.y = q.y();
-  msg.orientation.z = q.z();
-  msg.orientation.w = q.w();
-  // Set the angular velocity
+  msg.orientation = tf2::toMsg(q);
   msg.angular_velocity.x = imu_data.data.roll_vel;
   msg.angular_velocity.y = imu_data.data.pitch_vel;
   msg.angular_velocity.z = imu_data.data.yaw_vel;
-  // Set the linear acceleration
-  // msg.linear_acceleration.x = imu_data.data.x_accel;
-  // msg.linear_acceleration.y = imu_data.data.y_accel;
-  // msg.linear_acceleration.z = imu_data.data.z_accel;
-  // Publish the message
   imu_pub_->publish(msg);
+
+  joint_state_->name = {"gimbal_pitch_joint", "gimbal_yaw_joint"};
+  joint_state_->position = {imu_data.data.pitch, imu_data.data.yaw};
 }
 
 void StandardRobotPpRos2Node::publishRobotInfo(ReceiveRobotInfoData & robot_info)
@@ -619,21 +613,17 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
   last_hp_ = robot_status.data.current_up;
 }
 
-void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & joint_state)
+void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & packet)
 {
-  sensor_msgs::msg::JointState msg;
+  float pitch = packet.data.pitch;
+  float yaw = packet.data.yaw;
 
-  msg.position.resize(2);
-  msg.name.resize(2);
-  msg.header.stamp = now();
+  joint_state_->name.emplace_back("gimbal_pitch_odom_joint");
+  joint_state_->position.emplace_back(pitch);
 
-  msg.name[0] = "gimbal_pitch_joint";
-  msg.position[0] = joint_state.data.pitch;
-
-  msg.name[1] = "gimbal_yaw_joint";
-  msg.position[1] = joint_state.data.yaw;
-
-  joint_state_pub_->publish(msg);
+  joint_state_->name.emplace_back("gimbal_yaw_odom_joint");
+  joint_state_->position.emplace_back(yaw);
+  joint_state_pub_->publish(*joint_state_);
 }
 
 void StandardRobotPpRos2Node::publishBuff(ReceiveBuff & buff)
@@ -714,11 +704,12 @@ void StandardRobotPpRos2Node::cmdGimbalJointCallback(
   }
 }
 
-void StandardRobotPpRos2Node::cmdTrakcingCallback(
+void StandardRobotPpRos2Node::visionTargetCallback(
   const auto_aim_interfaces::msg::Target::SharedPtr msg)
 {
   send_robot_cmd_data_.data.tracking.tracking = msg->tracking;
 }
+
 void StandardRobotPpRos2Node::cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg)
 {
   send_robot_cmd_data_.data.shoot.fric_on = true;

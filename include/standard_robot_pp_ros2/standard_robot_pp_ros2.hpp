@@ -109,9 +109,10 @@ private:
   void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
-  void cmdTrakcingCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
+  void visionTargetCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
 
   float last_hp_;
+  std::shared_ptr<sensor_msgs::msg::JointState> joint_state_;
 };
 }  // namespace standard_robot_pp_ros2
 
