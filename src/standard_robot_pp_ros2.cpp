@@ -14,6 +14,8 @@
 
 #include "standard_robot_pp_ros2/standard_robot_pp_ros2.hpp"
 
+#include <memory>
+
 #include "standard_robot_pp_ros2/crc8_crc16.hpp"
 #include "standard_robot_pp_ros2/packet_typedef.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -41,8 +43,6 @@ StandardRobotPpRos2Node::StandardRobotPpRos2Node(const rclcpp::NodeOptions & opt
   robot_models_.shoot = {{0, "无发射机构"}, {1, "摩擦轮+拨弹盘"}, {2, "气动+拨弹盘"}};
   robot_models_.arm = {{0, "无机械臂"}, {1, "mini机械臂"}};
   robot_models_.custom_controller = {{0, "无自定义控制器"}, {1, "mini自定义控制器"}};
-
-  joint_state_ = std::make_unique<sensor_msgs::msg::JointState>();
 
   serial_port_protect_thread_ = std::thread(&StandardRobotPpRos2Node::serialPortProtect, this);
   receive_thread_ = std::thread(&StandardRobotPpRos2Node::receiveData, this);
@@ -428,21 +428,33 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
 
 void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
 {
-  sensor_msgs::msg::Imu msg;
-  msg.header.stamp = joint_state_->header.stamp = now();
-  msg.header.frame_id = "gimbal_pitch_odom";
+  sensor_msgs::msg::JointState joint_msg;
+  sensor_msgs::msg::Imu imu_msg;
+  imu_msg.header.stamp = joint_msg.header.stamp = now();
+  imu_msg.header.frame_id = "gimbal_pitch_odom";
 
   // Convert Euler angles to quaternion
   tf2::Quaternion q;
   q.setRPY(imu_data.data.roll, imu_data.data.pitch, imu_data.data.yaw);
-  msg.orientation = tf2::toMsg(q);
-  msg.angular_velocity.x = imu_data.data.roll_vel;
-  msg.angular_velocity.y = imu_data.data.pitch_vel;
-  msg.angular_velocity.z = imu_data.data.yaw_vel;
-  imu_pub_->publish(msg);
+  imu_msg.orientation = tf2::toMsg(q);
+  imu_msg.angular_velocity.x = imu_data.data.roll_vel;
+  imu_msg.angular_velocity.y = imu_data.data.pitch_vel;
+  imu_msg.angular_velocity.z = imu_data.data.yaw_vel;
+  imu_pub_->publish(imu_msg);
 
-  joint_state_->name = {"gimbal_pitch_joint", "gimbal_yaw_joint"};
-  joint_state_->position = {imu_data.data.pitch, imu_data.data.yaw};
+  joint_msg.name = {
+    "gimbal_pitch_joint",
+    "gimbal_yaw_joint",
+    "gimbal_pitch_odom_joint",
+    "gimbal_yaw_odom_joint",
+  };
+  joint_msg.position = {
+    imu_data.data.pitch,
+    imu_data.data.yaw,
+    last_gimbal_pitch_odom_joint_,
+    last_gimbal_yaw_odom_joint_,
+  };
+  joint_state_pub_->publish(joint_msg);
 }
 
 void StandardRobotPpRos2Node::publishRobotInfo(ReceiveRobotInfoData & robot_info)
@@ -615,15 +627,8 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
 
 void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & packet)
 {
-  float pitch = packet.data.pitch;
-  float yaw = packet.data.yaw;
-
-  joint_state_->name.emplace_back("gimbal_pitch_odom_joint");
-  joint_state_->position.emplace_back(pitch);
-
-  joint_state_->name.emplace_back("gimbal_yaw_odom_joint");
-  joint_state_->position.emplace_back(yaw);
-  joint_state_pub_->publish(*joint_state_);
+  last_gimbal_pitch_odom_joint_ = packet.data.pitch;
+  last_gimbal_yaw_odom_joint_ = packet.data.yaw;
 }
 
 void StandardRobotPpRos2Node::publishBuff(ReceiveBuff & buff)

@@ -112,7 +112,7 @@ private:
   void visionTargetCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
 
   float last_hp_;
-  std::shared_ptr<sensor_msgs::msg::JointState> joint_state_;
+  float last_gimbal_pitch_odom_joint_, last_gimbal_yaw_odom_joint_;
 };
 }  // namespace standard_robot_pp_ros2
 

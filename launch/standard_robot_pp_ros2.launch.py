@@ -91,7 +91,7 @@ def generate_launch_description():
 
     declare_use_respawn_cmd = DeclareLaunchArgument(
         "use_respawn",
-        default_value="False",
+        default_value="True",
         description="Whether to respawn if a node crashes. Applied when composition is disabled.",
     )
 
