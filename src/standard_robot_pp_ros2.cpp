@@ -321,6 +321,10 @@ void StandardRobotPpRos2Node::receiveData()
       // 数据段读取完成后添加 header_frame_buf 到 data_buf，得到完整数据包
       data_buf.insert(data_buf.begin(), header_frame_buf.begin(), header_frame_buf.end());
 
+      if (!debug_ && header_frame.id == ID_DEBUG) {
+        continue;
+      }
+
       // 整包数据校验
       bool crc16_ok = crc16::verify_CRC16_check_sum(data_buf);
       if (!crc16_ok) {
@@ -413,16 +417,14 @@ void StandardRobotPpRos2Node::publishDebugData(ReceiveDebugData & received_debug
       continue;
     }
 
-    if (debug_) {
-      if (debug_pub_map_.find(name) == debug_pub_map_.end()) {
-        createNewDebugPublisher(name);
-      }
-      debug_pub = debug_pub_map_.at(name);
-
-      example_interfaces::msg::Float64 msg;
-      msg.data = package.data;
-      debug_pub->publish(msg);
+    if (debug_pub_map_.find(name) == debug_pub_map_.end()) {
+      createNewDebugPublisher(name);
     }
+    debug_pub = debug_pub_map_.at(name);
+
+    example_interfaces::msg::Float64 msg;
+    msg.data = package.data;
+    debug_pub->publish(msg);
   }
 }
 
