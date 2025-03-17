@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "auto_aim_interfaces/msg/target.hpp"
 #include "example_interfaces/msg/float64.hpp"
@@ -110,6 +111,17 @@ private:
   void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
   void visionTargetCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
+
+  void setParam(const rclcpp::Parameter & param);
+  bool getDetectColor(uint8_t robot_id, uint8_t & color);
+
+  // Param client to set detect_color
+  using ResultFuturePtr = std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>;
+  bool initial_set_param_ = false;
+  uint8_t previous_receive_color_ = 0;
+  rclcpp::AsyncParametersClient::SharedPtr detector_param_client_;
+  ResultFuturePtr set_param_future_;
+  std::string detector_node_name_;
 
   float last_hp_;
   float last_gimbal_pitch_odom_joint_, last_gimbal_yaw_odom_joint_;

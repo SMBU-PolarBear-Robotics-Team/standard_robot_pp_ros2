@@ -621,10 +621,17 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
   if (last_hp_ - msg.current_hp > 0) {
     msg.is_hp_deduced = true;
   }
+  last_hp_ = robot_status.data.current_up;
 
   robot_status_pub_->publish(msg);
 
-  last_hp_ = robot_status.data.current_up;
+  uint8_t detect_color;
+  if (getDetectColor(robot_status.data.robot_id, detect_color)) {
+    if (!initial_set_param_ || detect_color != previous_receive_color_) {
+      setParam(rclcpp::Parameter("detect_color", detect_color));
+      previous_receive_color_ = detect_color;
+    }
+  }
 }
 
 void StandardRobotPpRos2Node::publishJointState(ReceiveJointState & packet)
@@ -682,6 +689,9 @@ void StandardRobotPpRos2Node::sendData()
       RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
       is_usb_ok_ = false;
     }
+    RCLCPP_INFO_THROTTLE(
+      get_logger(), *this->get_clock(), 1000, "vx: %f, vy: %f",
+      send_robot_cmd_data_.data.speed_vector.vx, send_robot_cmd_data_.data.speed_vector.vy);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
@@ -722,6 +732,69 @@ void StandardRobotPpRos2Node::cmdShootCallback(const example_interfaces::msg::UI
 {
   send_robot_cmd_data_.data.shoot.fric_on = true;
   send_robot_cmd_data_.data.shoot.fire = msg->data;
+}
+
+void StandardRobotPpRos2Node::setParam(const rclcpp::Parameter & param)
+{
+  if (!initial_set_param_) {
+    auto node_graph = this->get_node_graph_interface();
+    auto node_names = node_graph->get_node_names();
+    std::vector<std::string> possible_detectors = {
+      "armor_detector_openvino", "armor_detector_opencv"};
+
+    for (const auto & name : possible_detectors) {
+      for (const auto & node_name : node_names) {
+        if (node_name.find(name) != std::string::npos) {
+          detector_node_name_ = node_name;
+          break;
+        }
+      }
+      if (!detector_node_name_.empty()) {
+        break;
+      }
+    }
+
+    if (detector_node_name_.empty()) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *this->get_clock(), 1000, "No detector node found!");
+      return;
+    }
+
+    detector_param_client_ =
+      std::make_shared<rclcpp::AsyncParametersClient>(this, detector_node_name_);
+    if (!detector_param_client_->service_is_ready()) {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *this->get_clock(), 1000, "Service not ready, skipping parameter set");
+      return;
+    }
+  }
+
+  if (
+    !set_param_future_.valid() ||
+    set_param_future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    RCLCPP_INFO(get_logger(), "Setting detect_color to %ld...", param.as_int());
+    set_param_future_ = detector_param_client_->set_parameters(
+      {param}, [this, param](const ResultFuturePtr & results) {
+        for (const auto & result : results.get()) {
+          if (!result.successful) {
+            RCLCPP_ERROR(get_logger(), "Failed to set parameter: %s", result.reason.c_str());
+            return;
+          }
+        }
+        RCLCPP_INFO(get_logger(), "Successfully set detect_color to %ld!", param.as_int());
+        initial_set_param_ = true;
+      });
+  }
+}
+
+bool StandardRobotPpRos2Node::getDetectColor(uint8_t robot_id, uint8_t & color)
+{
+  if (robot_id == 0 || (robot_id > 11 && robot_id < 101)) {
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), *this->get_clock(), 1000, "Invalid robot ID: %d. Color not set.", robot_id);
+    return false;
+  }
+  color = (robot_id >= 100) ? 0 : 1;
+  return true;
 }
 
 }  // namespace standard_robot_pp_ros2
