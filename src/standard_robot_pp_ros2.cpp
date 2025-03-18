@@ -18,10 +18,13 @@
 
 #include "standard_robot_pp_ros2/crc8_crc16.hpp"
 #include "standard_robot_pp_ros2/packet_typedef.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 #define USB_NOT_OK_SLEEP_TIME 1000   // (ms)
 #define USB_PROTECT_SLEEP_TIME 1000  // (ms)
+
+using namespace std::chrono_literals;
 
 namespace standard_robot_pp_ros2
 {
@@ -202,6 +205,7 @@ void StandardRobotPpRos2Node::getParams()
     std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
 
   debug_ = declare_parameter("debug", false);
+  record_rosbag_ = declare_parameter("record_rosbag", false);
 }
 
 /********************************************************/
@@ -522,11 +526,30 @@ void StandardRobotPpRos2Node::publishAllRobotHp(ReceiveAllRobotHpData & all_robo
 void StandardRobotPpRos2Node::publishGameStatus(ReceiveGameStatusData & game_status)
 {
   pb_rm_interfaces::msg::GameStatus msg;
-
   msg.game_progress = game_status.data.game_progress;
   msg.stage_remain_time = game_status.data.stage_remain_time;
-
   game_status_pub_->publish(msg);
+
+  if (record_rosbag_ && game_status.data.game_progress != previous_game_progress_) {
+    previous_game_progress_ = game_status.data.game_progress;
+    RCLCPP_INFO(get_logger(), "Game progress: %d", game_status.data.game_progress);
+
+    std::string service_name;
+    switch (game_status.data.game_progress) {
+      case pb_rm_interfaces::msg::GameStatus::COUNT_DOWN:
+        service_name = "start_recording";
+        break;
+      case pb_rm_interfaces::msg::GameStatus::GAME_OVER:
+        service_name = "stop_recording";
+        break;
+      default:
+        return;
+    }
+
+    if (!callTriggerService(service_name)) {
+      RCLCPP_ERROR(get_logger(), "Failed to call service: %s", service_name.c_str());
+    }
+  }
 }
 
 void StandardRobotPpRos2Node::publishRobotMotion(ReceiveRobotMotionData & robot_motion)
@@ -628,8 +651,9 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
   uint8_t detect_color;
   if (getDetectColor(robot_status.data.robot_id, detect_color)) {
     if (!initial_set_param_ || detect_color != previous_receive_color_) {
-      setParam(rclcpp::Parameter("detect_color", detect_color));
       previous_receive_color_ = detect_color;
+      setParam(rclcpp::Parameter("detect_color", detect_color));
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
   }
 }
@@ -689,10 +713,6 @@ void StandardRobotPpRos2Node::sendData()
       RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
       is_usb_ok_ = false;
     }
-    RCLCPP_INFO_THROTTLE(
-      get_logger(), *this->get_clock(), 1000, "vx: %f, vy: %f",
-      send_robot_cmd_data_.data.speed_vector.vx, send_robot_cmd_data_.data.speed_vector.vy);
-
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 }
@@ -795,6 +815,41 @@ bool StandardRobotPpRos2Node::getDetectColor(uint8_t robot_id, uint8_t & color)
   }
   color = (robot_id >= 100) ? 0 : 1;
   return true;
+}
+
+bool StandardRobotPpRos2Node::callTriggerService(const std::string & service_name)
+{
+  auto client = this->create_client<std_srvs::srv::Trigger>(service_name);
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+  auto start_time = std::chrono::steady_clock::now();
+  while (!client->wait_for_service(0.1s)) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(
+        get_logger(), "Interrupted while waiting for the service: %s", service_name.c_str());
+      return false;
+    }
+    auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+    if (elapsed_time > std::chrono::seconds(5)) {
+      RCLCPP_ERROR(
+        get_logger(), "Service %s not available after 5 seconds, giving up.", service_name.c_str());
+      return false;
+    }
+    RCLCPP_INFO(get_logger(), "Service %s not available, waiting again...", service_name.c_str());
+  }
+
+  auto result = client->async_send_request(request);
+  if (
+    rclcpp::spin_until_future_complete(this->shared_from_this(), result) ==
+    rclcpp::FutureReturnCode::SUCCESS) {
+    RCLCPP_INFO(
+      get_logger(), "Service %s call succeeded: %s", service_name.c_str(),
+      result.get()->success ? "true" : "false");
+    return result.get()->success;
+  }
+
+  RCLCPP_ERROR(get_logger(), "Service %s call failed", service_name.c_str());
+  return false;
 }
 
 }  // namespace standard_robot_pp_ros2

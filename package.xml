@@ -21,6 +21,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>example_interfaces</depend>
   <depend>pb_rm_interfaces</depend>
   <depend>auto_aim_interfaces</depend>

@@ -55,6 +55,7 @@ private:
   std::string device_name_;
   std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
   std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
+  bool record_rosbag_;
 
   std::thread receive_thread_;
   std::thread send_thread_;
@@ -114,6 +115,7 @@ private:
 
   void setParam(const rclcpp::Parameter & param);
   bool getDetectColor(uint8_t robot_id, uint8_t & color);
+  bool callTriggerService(const std::string & service_name);
 
   // Param client to set detect_color
   using ResultFuturePtr = std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>;
@@ -122,6 +124,8 @@ private:
   rclcpp::AsyncParametersClient::SharedPtr detector_param_client_;
   ResultFuturePtr set_param_future_;
   std::string detector_node_name_;
+
+  uint8_t previous_game_progress_ = 0;
 
   float last_hp_;
   float last_gimbal_pitch_odom_joint_, last_gimbal_yaw_odom_joint_;
