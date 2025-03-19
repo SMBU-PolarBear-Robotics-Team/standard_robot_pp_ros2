@@ -687,6 +687,8 @@ void StandardRobotPpRos2Node::sendData()
   send_robot_cmd_data_.frame_header.id = ID_ROBOT_CMD;
   send_robot_cmd_data_.frame_header.len = sizeof(SendRobotCmdData) - 6;
   send_robot_cmd_data_.data.speed_vector.vx = 0;
+  send_robot_cmd_data_.data.speed_vector.vy = 0;
+  send_robot_cmd_data_.data.speed_vector.wz = 0;
   // 添加帧头crc8校验
   crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
