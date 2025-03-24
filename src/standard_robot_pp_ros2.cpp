@@ -457,8 +457,8 @@ void StandardRobotPpRos2Node::publishImuData(ReceiveImuData & imu_data)
   joint_msg.position = {
     imu_data.data.pitch,
     imu_data.data.yaw,
-    last_gimbal_pitch_odom_joint_ - imu_data.data.pitch,
-    last_gimbal_yaw_odom_joint_ - imu_data.data.yaw,
+    last_gimbal_pitch_odom_joint_,
+    last_gimbal_yaw_odom_joint_,
   };
   joint_state_pub_->publish(joint_msg);
 }
