@@ -204,8 +204,9 @@ void StandardRobotPpRos2Node::getParams()
   device_config_ =
     std::make_unique<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
 
-  debug_ = declare_parameter("debug", false);
   record_rosbag_ = declare_parameter("record_rosbag", false);
+  set_detector_color_ = declare_parameter("set_detector_color", false);
+  debug_ = declare_parameter("debug", false);
 }
 
 /********************************************************/
@@ -648,12 +649,14 @@ void StandardRobotPpRos2Node::publishRobotStatus(ReceiveRobotStatus & robot_stat
 
   robot_status_pub_->publish(msg);
 
-  uint8_t detect_color;
-  if (getDetectColor(robot_status.data.robot_id, detect_color)) {
-    if (!initial_set_param_ || detect_color != previous_receive_color_) {
-      previous_receive_color_ = detect_color;
-      setParam(rclcpp::Parameter("detect_color", detect_color));
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  if (set_detector_color_) {
+    uint8_t detect_color;
+    if (getDetectColor(robot_status.data.robot_id, detect_color)) {
+      if (!initial_set_param_ || detect_color != previous_receive_color_) {
+        previous_receive_color_ = detect_color;
+        setParam(rclcpp::Parameter("detect_color", detect_color));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      }
     }
   }
 }

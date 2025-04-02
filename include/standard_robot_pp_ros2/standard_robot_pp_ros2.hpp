@@ -56,6 +56,7 @@ private:
   std::unique_ptr<drivers::serial_driver::SerialPortConfig> device_config_;
   std::unique_ptr<drivers::serial_driver::SerialDriver> serial_driver_;
   bool record_rosbag_;
+  bool set_detector_color_;
 
   std::thread receive_thread_;
   std::thread send_thread_;
