@@ -26,14 +26,14 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "pb_rm_interfaces/msg/buff.hpp"
 #include "pb_rm_interfaces/msg/event_data.hpp"
-#include "pb_rm_interfaces/msg/sentry_info.hpp"      // add
-#include "pb_rm_interfaces/msg/sentry_cmd.hpp"       // add
 #include "pb_rm_interfaces/msg/game_robot_hp.hpp"
 #include "pb_rm_interfaces/msg/game_status.hpp"
 #include "pb_rm_interfaces/msg/ground_robot_position.hpp"
 #include "pb_rm_interfaces/msg/rfid_status.hpp"
 #include "pb_rm_interfaces/msg/robot_state_info.hpp"
 #include "pb_rm_interfaces/msg/robot_status.hpp"
+#include "pb_rm_interfaces/msg/sentry_cmd.hpp"   // add
+#include "pb_rm_interfaces/msg/sentry_info.hpp"  // add
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -79,14 +79,12 @@ private:
   rclcpp::Publisher<pb_rm_interfaces::msg::Buff>::SharedPtr buff_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::SentryInfo>::SharedPtr sentry_info_pub_;  // add
 
-
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr cmd_gimbal_joint_sub_;
   rclcpp::Subscription<example_interfaces::msg::UInt8>::SharedPtr cmd_shoot_sub_;
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr cmd_tracking_sub_;
   rclcpp::Subscription<pb_rm_interfaces::msg::SentryCmd>::SharedPtr sentry_cmd_sub_;  // add
-
 
   RobotModels robot_models_;
   std::unordered_map<std::string, rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr>
@@ -121,7 +119,7 @@ private:
   void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
   void visionTargetCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
-  void sentryCmdCallback(const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg); 
+  void sentryCmdCallback(const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg);
   void setParam(const rclcpp::Parameter & param);
   bool getDetectColor(uint8_t robot_id, uint8_t & color);
   bool callTriggerService(const std::string & service_name);
