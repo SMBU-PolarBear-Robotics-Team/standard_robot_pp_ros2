@@ -124,7 +124,7 @@ void StandardRobotPpRos2Node::createSubscription()
   cmd_tracking_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
     "tracker/target", 10,
     std::bind(&StandardRobotPpRos2Node::visionTargetCallback, this, std::placeholders::_1));
-  
+
   sentry_cmd_sub_ = this->create_subscription<pb_rm_interfaces::msg::SentryCmd>(
     "sentry_cmd", 10,
     std::bind(&StandardRobotPpRos2Node::sentryCmdCallback, this, std::placeholders::_1));
@@ -527,7 +527,6 @@ void StandardRobotPpRos2Node::publishAllRobotHp(ReceiveAllRobotHpData & all_robo
   all_robot_hp_pub_->publish(msg);
 }
 
-
 void StandardRobotPpRos2Node::publishGameStatus(ReceiveGameStatusData & game_status)
 {
   pb_rm_interfaces::msg::GameStatus msg;
@@ -702,7 +701,6 @@ void StandardRobotPpRos2Node::publishSentryInfo(ReceiveSentryInfo & sentry_info)
   sentry_info_pub_->publish(msg);
 }
 
-
 /********************************************************/
 /* Send data                                            */
 /********************************************************/
@@ -720,7 +718,6 @@ void StandardRobotPpRos2Node::sendData()
   crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
-
   // 初始化哨兵指令数据包
   send_sentry_cmd_data_.frame_header.sof = SOF_SEND;
   send_sentry_cmd_data_.frame_header.id = ID_SENTRY_CMD;
@@ -728,8 +725,6 @@ void StandardRobotPpRos2Node::sendData()
   send_sentry_cmd_data_.data.sentry_cmd = 0;
   crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_sentry_cmd_data_), sizeof(HeaderFrame));
-
-
 
   int retry_count = 0;
 
@@ -746,11 +741,11 @@ void StandardRobotPpRos2Node::sendData()
       crc16::append_CRC16_check_sum(
         reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(SendRobotCmdData));
 
-     // 发送机器人控制数据
+      // 发送机器人控制数据
       std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
       serial_driver_->port()->send(send_data);
 
-    // 发送哨兵指令数据
+      // 发送哨兵指令数据
       crc16::append_CRC16_check_sum(
         reinterpret_cast<uint8_t *>(&send_sentry_cmd_data_), sizeof(SendSentryCmdData));
       std::vector<uint8_t> sentry_cmd_data = toVector(send_sentry_cmd_data_);
@@ -800,8 +795,8 @@ void StandardRobotPpRos2Node::cmdShootCallback(const example_interfaces::msg::UI
   send_robot_cmd_data_.data.shoot.fire = msg->data;
 }
 
-
-void StandardRobotPpRos2Node::sentryCmdCallback(const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg)
+void StandardRobotPpRos2Node::sentryCmdCallback(
+  const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg)
 {
   // sentry_cmd (uint32, bit 0-31)
   send_sentry_cmd_data_.data.sentry_cmd = 0;

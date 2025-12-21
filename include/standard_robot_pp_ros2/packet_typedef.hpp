@@ -38,10 +38,10 @@ const uint8_t ID_RFID_STATUS = 0x0A;
 const uint8_t ID_ROBOT_STATUS = 0x0B;
 const uint8_t ID_JOINT_STATE = 0x0C;
 const uint8_t ID_BUFF = 0x0D;
-const uint8_t ID_SENTRY_INFO = 0x0E; 
+const uint8_t ID_SENTRY_INFO = 0x0E;
 // Send
 const uint8_t ID_ROBOT_CMD = 0x01;
-const uint8_t ID_SENTRY_CMD = 0x04; 
+const uint8_t ID_SENTRY_CMD = 0x04;
 const uint8_t DEBUG_PACKAGE_NUM = 10;
 const uint8_t DEBUG_PACKAGE_NAME_LEN = 10;
 
@@ -143,14 +143,14 @@ struct ReceiveEventData
     uint8_t overlapping_supply_zone : 1;
     uint8_t supply_zone : 1;
 
-    uint8_t small_energy : 2; //
-    uint8_t big_energy : 2; //
-    uint8_t reserved1 : 1; //
+    uint8_t small_energy : 2;  //
+    uint8_t big_energy : 2;    //
+    uint8_t reserved1 : 1;     //
 
     uint8_t central_highland : 2;
     uint8_t trapezoidal_highland : 2;
     uint8_t center_gain_zone : 2;
-    uint8_t reserved2 : 2; //
+    uint8_t reserved2 : 2;  //
 
   } __attribute__((packed)) data;
   uint16_t crc;
@@ -179,14 +179,14 @@ struct ReceiveAllRobotHpData
 
   struct
   {
-    uint16_t ally_1_robot_HP;      // 
-    uint16_t ally_2_robot_HP;      // 
-    uint16_t ally_3_robot_HP;      // 
-    uint16_t ally_4_robot_HP;      // 
-    uint16_t reserved;             // 
-    uint16_t ally_7_robot_HP;      // 
-    uint16_t ally_outpost_HP;      // 
-    uint16_t ally_base_HP;         // 
+    uint16_t ally_1_robot_HP;  //
+    uint16_t ally_2_robot_HP;  //
+    uint16_t ally_3_robot_HP;  //
+    uint16_t ally_4_robot_HP;  //
+    uint16_t reserved;         //
+    uint16_t ally_7_robot_HP;  //
+    uint16_t ally_outpost_HP;  //
+    uint16_t ally_base_HP;     //
   } __attribute__((packed)) data;
 
   uint16_t crc;
@@ -241,8 +241,8 @@ struct ReceiveGroundRobotPosition
     float standard_3_x;
     float standard_3_y;
 
-    float standard_4_x;//
-    float standard_4_y;//
+    float standard_4_x;  //
+    float standard_4_y;  //
 
     float reserved1;
     float reserved2;
@@ -336,7 +336,6 @@ struct ReceiveJointState
 // 机器人增益和底盘能量数据包
 struct ReceiveBuff
 {
-  
   HeaderFrame frame_header;
   uint32_t time_stamp;
 
@@ -367,8 +366,6 @@ struct ReceiveSentryInfo
 
   uint16_t crc;
 } __attribute__((packed));
-
-
 
 /********************************************************/
 /* Send data                                            */
@@ -418,7 +415,6 @@ struct SendRobotCmdData
   uint16_t checksum;
 } __attribute__((packed));
 
-
 // 哨兵自主决策指令数据包 (0x04 - 依据：表1-32)
 struct SendSentryCmdData
 {
@@ -432,8 +428,6 @@ struct SendSentryCmdData
 
   uint16_t checksum;
 } __attribute__((packed));
-
-
 
 /********************************************************/
 /* template                                             */
