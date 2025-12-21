@@ -32,6 +32,8 @@
 #include "pb_rm_interfaces/msg/rfid_status.hpp"
 #include "pb_rm_interfaces/msg/robot_state_info.hpp"
 #include "pb_rm_interfaces/msg/robot_status.hpp"
+#include "pb_rm_interfaces/msg/sentry_cmd.hpp"   // add
+#include "pb_rm_interfaces/msg/sentry_info.hpp"  // add
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -75,18 +77,21 @@ private:
   rclcpp::Publisher<pb_rm_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
   rclcpp::Publisher<pb_rm_interfaces::msg::Buff>::SharedPtr buff_pub_;
+  rclcpp::Publisher<pb_rm_interfaces::msg::SentryInfo>::SharedPtr sentry_info_pub_;  // add
 
   // Subscribe
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr cmd_gimbal_joint_sub_;
   rclcpp::Subscription<example_interfaces::msg::UInt8>::SharedPtr cmd_shoot_sub_;
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr cmd_tracking_sub_;
+  rclcpp::Subscription<pb_rm_interfaces::msg::SentryCmd>::SharedPtr sentry_cmd_sub_;  // add
 
   RobotModels robot_models_;
   std::unordered_map<std::string, rclcpp::Publisher<example_interfaces::msg::Float64>::SharedPtr>
     debug_pub_map_;
 
   SendRobotCmdData send_robot_cmd_data_;
+  SendSentryCmdData send_sentry_cmd_data_;  // add
 
   void getParams();
   void createPublisher();
@@ -108,12 +113,13 @@ private:
   void publishRobotStatus(ReceiveRobotStatus & data);
   void publishJointState(ReceiveJointState & data);
   void publishBuff(ReceiveBuff & data);
+  void publishSentryInfo(ReceiveSentryInfo & data);  // add
 
   void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void cmdGimbalJointCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void cmdShootCallback(const example_interfaces::msg::UInt8::SharedPtr msg);
   void visionTargetCallback(const auto_aim_interfaces::msg::Target::SharedPtr msg);
-
+  void sentryCmdCallback(const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg);
   void setParam(const rclcpp::Parameter & param);
   bool getDetectColor(uint8_t robot_id, uint8_t & color);
   bool callTriggerService(const std::string & service_name);
