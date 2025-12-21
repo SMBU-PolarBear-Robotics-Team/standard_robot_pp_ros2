@@ -96,6 +96,8 @@ void StandardRobotPpRos2Node::createPublisher()
   robot_status_pub_ =
     this->create_publisher<pb_rm_interfaces::msg::RobotStatus>("referee/robot_status", 10);
   buff_pub_ = this->create_publisher<pb_rm_interfaces::msg::Buff>("referee/buff", 10);
+  sentry_info_pub_ =
+    this->create_publisher<pb_rm_interfaces::msg::SentryInfo>("referee/sentry_info", 10);
 }
 
 void StandardRobotPpRos2Node::createNewDebugPublisher(const std::string & name)
@@ -122,6 +124,10 @@ void StandardRobotPpRos2Node::createSubscription()
   cmd_tracking_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
     "tracker/target", 10,
     std::bind(&StandardRobotPpRos2Node::visionTargetCallback, this, std::placeholders::_1));
+  
+  sentry_cmd_sub_ = this->create_subscription<pb_rm_interfaces::msg::SentryCmd>(
+    "sentry_cmd", 10,
+    std::bind(&StandardRobotPpRos2Node::sentryCmdCallback, this, std::placeholders::_1));
 }
 
 void StandardRobotPpRos2Node::getParams()
@@ -391,6 +397,10 @@ void StandardRobotPpRos2Node::receiveData()
           ReceiveBuff buff = fromVector<ReceiveBuff>(data_buf);
           publishBuff(buff);
         } break;
+        case ID_SENTRY_INFO: {
+          ReceiveSentryInfo sentry_info = fromVector<ReceiveSentryInfo>(data_buf);
+          publishSentryInfo(sentry_info);
+        } break;
         default: {
           RCLCPP_WARN(get_logger(), "Invalid id: %d", header_frame.id);
         } break;
@@ -501,28 +511,22 @@ void StandardRobotPpRos2Node::publishEventData(ReceiveEventData & event_data)
   event_data_pub_->publish(msg);
 }
 
+//add
 void StandardRobotPpRos2Node::publishAllRobotHp(ReceiveAllRobotHpData & all_robot_hp)
 {
   pb_rm_interfaces::msg::GameRobotHP msg;
 
-  msg.red_1_robot_hp = all_robot_hp.data.red_1_robot_hp;
-  msg.red_2_robot_hp = all_robot_hp.data.red_2_robot_hp;
-  msg.red_3_robot_hp = all_robot_hp.data.red_3_robot_hp;
-  msg.red_4_robot_hp = all_robot_hp.data.red_4_robot_hp;
-  msg.red_7_robot_hp = all_robot_hp.data.red_7_robot_hp;
-  msg.red_outpost_hp = all_robot_hp.data.red_outpost_hp;
-  msg.red_base_hp = all_robot_hp.data.red_base_hp;
-
-  msg.blue_1_robot_hp = all_robot_hp.data.blue_1_robot_hp;
-  msg.blue_2_robot_hp = all_robot_hp.data.blue_2_robot_hp;
-  msg.blue_3_robot_hp = all_robot_hp.data.blue_3_robot_hp;
-  msg.blue_4_robot_hp = all_robot_hp.data.blue_4_robot_hp;
-  msg.blue_7_robot_hp = all_robot_hp.data.blue_7_robot_hp;
-  msg.blue_outpost_hp = all_robot_hp.data.blue_outpost_hp;
-  msg.blue_base_hp = all_robot_hp.data.blue_base_hp;
+  msg.ally_1_robot_hp = all_robot_hp.data.ally_1_robot_HP;
+  msg.ally_2_robot_hp = all_robot_hp.data.ally_2_robot_HP;
+  msg.ally_3_robot_hp = all_robot_hp.data.ally_3_robot_HP;
+  msg.ally_4_robot_hp = all_robot_hp.data.ally_4_robot_HP;
+  msg.ally_7_robot_hp = all_robot_hp.data.ally_7_robot_HP;
+  msg.ally_outpost_hp = all_robot_hp.data.ally_outpost_HP;
+  msg.ally_base_hp = all_robot_hp.data.ally_base_HP;
 
   all_robot_hp_pub_->publish(msg);
 }
+
 
 void StandardRobotPpRos2Node::publishGameStatus(ReceiveGameStatusData & game_status)
 {
@@ -569,17 +573,17 @@ void StandardRobotPpRos2Node::publishGroundRobotPosition(
 {
   pb_rm_interfaces::msg::GroundRobotPosition msg;
 
-  msg.hero_position.x = ground_robot_position.data.hero_x;
-  msg.hero_position.y = ground_robot_position.data.hero_y;
+  msg.hero_position_x = ground_robot_position.data.hero_x;
+  msg.hero_position_y = ground_robot_position.data.hero_y;
 
-  msg.engineer_position.x = ground_robot_position.data.engineer_x;
-  msg.engineer_position.y = ground_robot_position.data.engineer_y;
+  msg.engineer_position_x = ground_robot_position.data.engineer_x;
+  msg.engineer_position_y = ground_robot_position.data.engineer_y;
 
-  msg.standard_3_position.x = ground_robot_position.data.standard_3_x;
-  msg.standard_3_position.y = ground_robot_position.data.standard_3_y;
+  msg.standard_3_position_x = ground_robot_position.data.standard_3_x;
+  msg.standard_3_position_y = ground_robot_position.data.standard_3_y;
 
-  msg.standard_4_position.x = ground_robot_position.data.standard_4_x;
-  msg.standard_4_position.y = ground_robot_position.data.standard_4_y;
+  msg.standard_4_position_x = ground_robot_position.data.standard_4_x;
+  msg.standard_4_position_y = ground_robot_position.data.standard_4_y;
 
   ground_robot_position_pub_->publish(msg);
 }
@@ -679,6 +683,26 @@ void StandardRobotPpRos2Node::publishBuff(ReceiveBuff & buff)
   buff_pub_->publish(msg);
 }
 
+void StandardRobotPpRos2Node::publishSentryInfo(ReceiveSentryInfo & sentry_info)
+{
+  pb_rm_interfaces::msg::SentryInfo msg;
+
+  // 解析 sentry_info (uint32, bit 0-31)
+  msg.exchanged_projectile_allowance = sentry_info.data.sentry_info & 0x7FF;
+  msg.remote_projectile_exchange_count = (sentry_info.data.sentry_info >> 11) & 0xF;
+  msg.remote_hp_exchange_count = (sentry_info.data.sentry_info >> 15) & 0xF;
+  msg.can_free_respawn = (sentry_info.data.sentry_info >> 19) & 0x1;
+  msg.can_pay_respawn = (sentry_info.data.sentry_info >> 20) & 0x1;
+  msg.respawn_gold_cost = (sentry_info.data.sentry_info >> 21) & 0x3FF;
+
+  // 解析 sentry_info_2 (uint16, bit 0-15)
+  msg.current_posture = (sentry_info.data.sentry_info_2 >> 12) & 0x3;
+  msg.can_activate_rune = (sentry_info.data.sentry_info_2 >> 14) & 0x1;
+
+  sentry_info_pub_->publish(msg);
+}
+
+
 /********************************************************/
 /* Send data                                            */
 /********************************************************/
@@ -696,6 +720,17 @@ void StandardRobotPpRos2Node::sendData()
   crc8::append_CRC8_check_sum(
     reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(HeaderFrame));
 
+
+  // 初始化哨兵指令数据包
+  send_sentry_cmd_data_.frame_header.sof = SOF_SEND;
+  send_sentry_cmd_data_.frame_header.id = ID_SENTRY_CMD;
+  send_sentry_cmd_data_.frame_header.len = sizeof(SendSentryCmdData) - 6;
+  send_sentry_cmd_data_.data.sentry_cmd = 0;
+  crc8::append_CRC8_check_sum(
+    reinterpret_cast<uint8_t *>(&send_sentry_cmd_data_), sizeof(HeaderFrame));
+
+
+
   int retry_count = 0;
 
   while (rclcpp::ok()) {
@@ -711,9 +746,15 @@ void StandardRobotPpRos2Node::sendData()
       crc16::append_CRC16_check_sum(
         reinterpret_cast<uint8_t *>(&send_robot_cmd_data_), sizeof(SendRobotCmdData));
 
-      // 发送数据
+     // 发送机器人控制数据
       std::vector<uint8_t> send_data = toVector(send_robot_cmd_data_);
       serial_driver_->port()->send(send_data);
+
+    // 发送哨兵指令数据
+      crc16::append_CRC16_check_sum(
+        reinterpret_cast<uint8_t *>(&send_sentry_cmd_data_), sizeof(SendSentryCmdData));
+      std::vector<uint8_t> sentry_cmd_data = toVector(send_sentry_cmd_data_);
+      serial_driver_->port()->send(sentry_cmd_data);
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Error sending data: %s", ex.what());
       is_usb_ok_ = false;
@@ -757,6 +798,23 @@ void StandardRobotPpRos2Node::cmdShootCallback(const example_interfaces::msg::UI
 {
   send_robot_cmd_data_.data.shoot.fric_on = true;
   send_robot_cmd_data_.data.shoot.fire = msg->data;
+}
+
+
+void StandardRobotPpRos2Node::sentryCmdCallback(const pb_rm_interfaces::msg::SentryCmd::SharedPtr msg)
+{
+  // sentry_cmd (uint32, bit 0-31)
+  send_sentry_cmd_data_.data.sentry_cmd = 0;
+
+  send_sentry_cmd_data_.data.sentry_cmd |= (msg->confirm_respawn & 0x1);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->confirm_pay_respawn & 0x1) << 1);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->projectile_allowance_to_exchange & 0x7FF) << 2);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->remote_projectile_request_count & 0xF) << 13);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->remote_hp_request_count & 0xF) << 17);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->posture_command & 0x3) << 21);
+  send_sentry_cmd_data_.data.sentry_cmd |= ((msg->activate_rune & 0x1) << 23);
+
+  RCLCPP_INFO(get_logger(), "Sentry cmd: 0x%08X", send_sentry_cmd_data_.data.sentry_cmd);
 }
 
 void StandardRobotPpRos2Node::setParam(const rclcpp::Parameter & param)
