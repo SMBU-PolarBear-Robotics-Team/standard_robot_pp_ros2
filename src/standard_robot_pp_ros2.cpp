@@ -295,7 +295,7 @@ void StandardRobotPpRos2Node::receiveData()
       // sof[0] == SOF_RECEIVE 后读取剩余 header_frame 内容
       std::vector<uint8_t> header_frame_buf(3);  // sof 在读取完数据后添加
 
-      serial_driver_->port()->receive(header_frame_buf);  // 读取除 sof 外剩下的数据
+      serial_driver_->port()->receive(header_frame_buf);          // 读取除 sof 外剩下的数据
       header_frame_buf.insert(header_frame_buf.begin(), sof[0]);  // 添加 sof
       HeaderFrame header_frame = fromVector<HeaderFrame>(header_frame_buf);
 
